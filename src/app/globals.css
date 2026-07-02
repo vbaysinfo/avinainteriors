@@ -1,19 +1,19 @@
 @import "tailwindcss";
 
 :root {
-  --background: #faf7f1;
-  --foreground: #17140f;
+  --background: #f9f4e9;
+  --foreground: #16110a;
 
-  --color-ink: #17140f;
-  --color-ink-soft: #2b261e;
-  --color-cream: #faf7f1;
-  --color-sand: #efe7d8;
-  --color-sand-dark: #e2d5b8;
-  --color-gold: #a9803f;
-  --color-gold-light: #cba765;
-  --color-gold-deep: #8a6a30;
-  --color-forest: #3a4636;
-  --color-terracotta: #b1613f;
+  --color-ink: #16110a;
+  --color-ink-soft: #2c2417;
+  --color-cream: #f9f4e9;
+  --color-sand: #efe4cd;
+  --color-sand-dark: #ddc79a;
+  --color-gold: #ab8438;
+  --color-gold-light: #dcb567;
+  --color-gold-deep: #7c5c22;
+  --color-forest: #333f2e;
+  --color-terracotta: #a8562f;
 }
 
 @theme inline {
@@ -31,8 +31,8 @@
   --color-forest: var(--color-forest);
   --color-terracotta: var(--color-terracotta);
 
-  --font-display: var(--font-sora);
-  --font-sans: var(--font-inter);
+  --font-display: var(--font-fraunces);
+  --font-sans: var(--font-jost);
 
   --animate-marquee: marquee 32s linear infinite;
   --animate-fade-up: fade-up 0.8s ease forwards;
@@ -75,13 +75,14 @@ html {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-inter), sans-serif;
-  letter-spacing: -0.011em;
+  font-family: var(--font-jost), sans-serif;
+  letter-spacing: 0.01em;
 }
 
 .font-display {
-  font-family: var(--font-sora), sans-serif;
-  letter-spacing: -0.02em;
+  font-family: var(--font-fraunces), serif;
+  font-optical-sizing: auto;
+  letter-spacing: -0.01em;
 }
 
 ::selection {

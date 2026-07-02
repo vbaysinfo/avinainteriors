@@ -14,7 +14,7 @@ export function CTASection() {
       <div className="absolute inset-0 bg-ink/70" />
       <div className="container-px relative mx-auto max-w-3xl text-center">
         <Reveal>
-          <h2 className="font-display text-balance text-3xl font-semibold text-cream sm:text-4xl lg:text-5xl">
+          <h2 className="font-display text-balance text-3xl font-medium text-cream sm:text-4xl lg:text-5xl">
             Let&apos;s design your dream space in Visakhapatnam
           </h2>
         </Reveal>
