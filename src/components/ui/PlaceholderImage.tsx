@@ -4,11 +4,11 @@ import { cn } from "@/lib/utils";
 type Tone = "gold" | "forest" | "terracotta" | "ink" | "sand";
 
 const toneStyles: Record<Tone, string> = {
-  gold: "from-[#7a6852] via-[#9a8570] to-[#c4b39e]",
-  forest: "from-[#1c2b2a] via-[#2e4443] to-[#5a716f]",
-  terracotta: "from-[#4a332a] via-[#6b4a3a] to-[#a08470]",
-  ink: "from-[#242020] via-[#443c37] to-[#7a6f65]",
-  sand: "from-[#a0948a] via-[#d3c9bd] to-[#efe9e1]",
+  gold: "from-[#293032] via-[#445054] to-[#a1a7a9]",
+  forest: "from-[#4d443b] via-[#8d7b6b] to-[#c0b6ad]",
+  terracotta: "from-[#4d4a43] via-[#8c877a] to-[#bfbdb6]",
+  ink: "from-[#1f170f] via-[#342619] to-[#999288]",
+  sand: "from-[#9d9c9d] via-[#d1d0d1] to-[#dad9da]",
 };
 
 const toneText: Record<Tone, string> = {
