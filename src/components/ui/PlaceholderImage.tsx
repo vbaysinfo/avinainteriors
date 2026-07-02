@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 type Tone = "gold" | "forest" | "terracotta" | "ink" | "sand";
 
 const toneStyles: Record<Tone, string> = {
-  gold: "from-[#293032] via-[#445054] to-[#a1a7a9]",
+  gold: "from-[#7c5c22] via-[#ab8438] to-[#dcb567]",
   forest: "from-[#4d443b] via-[#8d7b6b] to-[#c0b6ad]",
   terracotta: "from-[#4d4a43] via-[#8c877a] to-[#bfbdb6]",
   ink: "from-[#1f170f] via-[#342619] to-[#999288]",
