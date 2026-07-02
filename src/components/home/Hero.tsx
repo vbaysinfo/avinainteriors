@@ -4,20 +4,14 @@ import { motion } from "framer-motion";
 import { ArrowRight, MapPin, Star } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 import { Button } from "@/components/ui/Button";
-import { PlaceholderImage } from "@/components/ui/PlaceholderImage";
+import { HeroIllustration } from "@/components/home/HeroIllustration";
 import { siteConfig, whatsappLink } from "@/data/site";
 
 export function Hero() {
   return (
     <section className="relative flex min-h-[100svh] items-center overflow-hidden bg-ink">
       <div className="absolute inset-0">
-        <PlaceholderImage
-          tone="ink"
-          label=""
-          icon="Sparkles"
-          showLabel={false}
-          className="h-full w-full"
-        />
+        <HeroIllustration className="h-full w-full" />
         <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/70 to-ink/30" />
         <div className="absolute inset-0 bg-gradient-to-r from-ink/90 via-ink/40 to-transparent" />
       </div>
