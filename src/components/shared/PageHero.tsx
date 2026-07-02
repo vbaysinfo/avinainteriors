@@ -39,7 +39,7 @@ export function PageHero({
           <Icon className="h-4 w-4" />
           {eyebrow}
         </p>
-        <h1 className="font-display max-w-3xl text-balance text-4xl font-medium leading-tight text-cream sm:text-5xl lg:text-6xl">
+        <h1 className="font-display max-w-3xl text-balance text-4xl font-semibold leading-tight text-cream sm:text-5xl lg:text-6xl">
           {title}
         </h1>
         {description && (

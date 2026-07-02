@@ -38,11 +38,11 @@ export function Hero() {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.1 }}
-            className="font-display text-balance text-4xl font-medium leading-[1.08] text-cream sm:text-6xl lg:text-7xl"
+            className="font-display text-balance text-4xl font-semibold leading-[1.08] text-cream sm:text-6xl lg:text-7xl"
           >
             Interiors that feel
             <br />
-            <span className="italic text-gold-light">as good as they look</span>
+            <span className="font-light text-gold-light">as good as they look</span>
           </motion.h1>
 
           <motion.p

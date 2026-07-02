@@ -31,8 +31,8 @@
   --color-forest: var(--color-forest);
   --color-terracotta: var(--color-terracotta);
 
-  --font-display: var(--font-playfair);
-  --font-sans: var(--font-manrope);
+  --font-display: var(--font-sora);
+  --font-sans: var(--font-inter);
 
   --animate-marquee: marquee 32s linear infinite;
   --animate-fade-up: fade-up 0.8s ease forwards;
@@ -75,11 +75,13 @@ html {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-manrope), sans-serif;
+  font-family: var(--font-inter), sans-serif;
+  letter-spacing: -0.011em;
 }
 
 .font-display {
-  font-family: var(--font-playfair), serif;
+  font-family: var(--font-sora), sans-serif;
+  letter-spacing: -0.02em;
 }
 
 ::selection {
