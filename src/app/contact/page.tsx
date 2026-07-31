@@ -6,7 +6,7 @@ import { Reveal } from "@/components/ui/Reveal";
 import { Button } from "@/components/ui/Button";
 import { ContactForm } from "@/components/contact/ContactForm";
 import { FAQSection } from "@/components/home/FAQSection";
-import { siteConfig, telLink, whatsappLink } from "@/data/site";
+import { siteConfig, telLink, telLink2, whatsappLink } from "@/data/site";
 
 export const metadata: Metadata = {
   title: "Contact Us — Free Interior Design Consultation in Visakhapatnam",
@@ -27,7 +27,7 @@ const infoCards = [
   {
     icon: Phone,
     title: "Call Us",
-    lines: [siteConfig.phone],
+    lines: [siteConfig.phone, siteConfig.phone2],
   },
   {
     icon: Mail,
@@ -70,6 +70,13 @@ export default function ContactPage() {
               <div className="mt-6 flex flex-wrap gap-4">
                 <Button href={telLink()} icon={<Phone className="h-4 w-4" />}>
                   {siteConfig.phone}
+                </Button>
+                <Button
+                  href={telLink2()}
+                  variant="secondary"
+                  icon={<Phone className="h-4 w-4" />}
+                >
+                  {siteConfig.phone2}
                 </Button>
                 <Button
                   href={whatsappLink()}

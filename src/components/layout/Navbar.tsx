@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X, Phone } from "lucide-react";
 import { mainNav } from "@/data/nav";
-import { siteConfig, telLink } from "@/data/site";
+import { siteConfig, telLink, telLink2 } from "@/data/site";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 
@@ -84,17 +84,28 @@ export function Navbar() {
           })}
         </div>
 
-        <div className="hidden items-center gap-3 lg:flex">
-          <a
-            href={telLink()}
+        <div className="hidden items-center gap-3 xl:flex">
+          <div
             className={cn(
               "flex items-center gap-2 text-sm font-medium",
               transparent ? "text-cream" : "text-ink"
             )}
           >
-            <Phone className="h-4 w-4" />
-            {siteConfig.phone}
-          </a>
+            <Phone className="h-4 w-4 shrink-0" />
+            <a href={telLink()} className="hover:opacity-80">
+              {siteConfig.phone}
+            </a>
+            <span className="opacity-40">/</span>
+            <a href={telLink2()} className="hover:opacity-80">
+              {siteConfig.phone2}
+            </a>
+          </div>
+          <Button href="/contact" size="sm" variant={transparent ? "ghost" : "primary"}>
+            Get Free Quote
+          </Button>
+        </div>
+
+        <div className="hidden items-center gap-3 lg:flex xl:hidden">
           <Button href="/contact" size="sm" variant={transparent ? "ghost" : "primary"}>
             Get Free Quote
           </Button>
@@ -142,6 +153,12 @@ export function Navbar() {
                   className="flex items-center gap-2 text-sm font-medium text-ink"
                 >
                   <Phone className="h-4 w-4" /> {siteConfig.phone}
+                </a>
+                <a
+                  href={telLink2()}
+                  className="flex items-center gap-2 text-sm font-medium text-ink"
+                >
+                  <Phone className="h-4 w-4" /> {siteConfig.phone2}
                 </a>
                 <Button href="/contact" className="w-full">
                   Get Free Quote

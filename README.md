@@ -42,7 +42,8 @@ edit these instead of hunting through components:
 
 | File | Controls |
 |---|---|
-| `src/data/site.ts` | Business name, phone, WhatsApp number, email, address, map, social links, Google rating, analytics IDs |
+| `src/data/site.ts` | Business name, phone (x2), WhatsApp number, email, address, map, social links, Google rating, analytics IDs, Google Sheets webhook URL |
+| `src/data/estimator.ts` | BHK types, rooms, package tiers and pricing rules used by the "Calculate Now" popup |
 | `src/data/services.ts` | The 8 services shown on `/services` |
 | `src/data/projects.ts` | Portfolio projects shown on `/portfolio` |
 | `src/data/testimonials.ts` | Client testimonials/reviews |
@@ -55,8 +56,10 @@ edit these instead of hunting through components:
 
 Open `src/data/site.ts` and replace the `TODO` values:
 
-- `phone` / `whatsappNumber` — your real number. `whatsappNumber` must be
-  digits only with country code, e.g. `919876543210`.
+- `phone` / `phone2` / `whatsappNumber` — your two business lines and your
+  WhatsApp number. `whatsappNumber` must be digits only with country code,
+  e.g. `919876543210`. Both `phone` and `phone2` are shown, click-to-call, in
+  the header, footer, Contact page and the estimator's confirmation screen.
 - `email`, `address`, `googleReviewLink`
 - `social` — your real Instagram/Facebook/YouTube/LinkedIn URLs
 
@@ -96,6 +99,45 @@ To make them live:
 - Or use the [Google Places API](https://developers.google.com/maps/documentation/places/web-service/place-details)
   (Place Details `reviews` field) from a server route, since it requires a
   server-side API key.
+
+## The "Calculate Now" cost estimator
+
+The Home page hero's **Calculate Now** button (`src/components/home/Hero.tsx`)
+opens a 4-step modal (`src/components/estimator/CalculateNowModal.tsx`):
+BHK type → rooms to design (with quantity selectors for bedrooms/bathrooms)
+→ Basic/Premium/Luxury package → contact details. On submit it shows a
+summary with a rule-based estimated price range, plus one-tap call and
+WhatsApp buttons, and pushes the lead to your Google Sheet (see below).
+
+Pricing is entirely rule-based, driven by `src/data/estimator.ts`
+(`bhkTypes`, `roomOptions`, `packageTiers`, `calculateEstimate`) — edit the
+`baseFee`/`baseCost`/`multiplier` numbers to match your real pricing. It is
+explicitly labelled in the UI as a rough estimate, not a final quote.
+
+## Saving leads to Google Sheets
+
+Both the Calculate Now popup and the Contact page form call
+`submitLead()` (`src/lib/leads.ts`), which posts `{ timestamp, name, phone,
+email, bhkType, roomsSelected, package, notes, source }` to
+`siteConfig.googleSheetsWebAppUrl`. Leave it blank and this step is skipped
+— leads still arrive via the WhatsApp/call fallback built into both forms.
+
+To wire it up to the shared
+[Google Sheet](https://docs.google.com/spreadsheets/d/1NCJZjsah1UONx3uvQ5JB-eJhgnkhesxMw6iv_RXPIwA/edit):
+
+1. Open the sheet → **Extensions → Apps Script**.
+2. Add columns to row 1 if not already present: `Timestamp | Name | Phone | Email | BHK Type | Rooms Selected | Package | Notes | Source Page`.
+3. Paste a `doPost(e)` function that parses `e.postData.contents` as JSON and
+   appends a row with `SpreadsheetApp.getActiveSheet().appendRow([...])` in
+   the same column order. Optionally call `MailApp.sendEmail(...)` here too,
+   to also email a copy of every submission to `vbaysinfo@gmail.com`.
+4. **Deploy → New deployment → Web app**, execute as *Me*, access *Anyone*.
+5. Copy the deployment's Web app URL into `siteConfig.googleSheetsWebAppUrl`
+   in `src/data/site.ts`.
+
+Requests are sent with `mode: "no-cors"` (Apps Script web apps don't return
+CORS headers), so the response body is opaque by design — this is
+fire-and-forget and never blocks the WhatsApp/call fallback.
 
 ## Connecting the contact form
 

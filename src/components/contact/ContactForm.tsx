@@ -6,6 +6,7 @@ import { Send, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { services } from "@/data/services";
 import { siteConfig } from "@/data/site";
+import { submitLead } from "@/lib/leads";
 
 // NOTE: This form has no backend by default — on submit it opens a
 // pre-filled WhatsApp chat with your business number (fastest, most
@@ -15,10 +16,12 @@ import { siteConfig } from "@/data/site";
 // see README.md > "Connecting the contact form".
 export function ContactForm() {
   const [submitted, setSubmitted] = useState(false);
+  const [company, setCompany] = useState(""); // honeypot — must stay empty
   const [form, setForm] = useState({
     name: "",
     phone: "",
     email: "",
+    locality: "",
     service: services[0]?.title ?? "",
     budget: "",
     message: "",
@@ -32,11 +35,29 @@ export function ContactForm() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (company) return; // honeypot tripped — silently drop
+
+    submitLead({
+      name: form.name,
+      phone: form.phone,
+      email: form.email || undefined,
+      notes: [
+        `Service: ${form.service}`,
+        form.locality ? `City/Locality: ${form.locality}` : null,
+        form.budget ? `Budget: ${form.budget}` : null,
+        form.message ? `Message: ${form.message}` : null,
+      ]
+        .filter(Boolean)
+        .join(" | "),
+      source: "Contact Page",
+    });
+
     const message = [
       `Hi ${siteConfig.name}! I'd like a free consultation.`,
       `Name: ${form.name}`,
       `Phone: ${form.phone}`,
       form.email ? `Email: ${form.email}` : null,
+      form.locality ? `City/Locality: ${form.locality}` : null,
       `Interested in: ${form.service}`,
       form.budget ? `Budget: ${form.budget}` : null,
       form.message ? `Message: ${form.message}` : null,
@@ -77,6 +98,17 @@ export function ContactForm() {
       onSubmit={handleSubmit}
       className="rounded-2xl border border-ink/10 bg-white/60 p-6 sm:p-8"
     >
+      {/* Honeypot — hidden from real users, catches basic bots */}
+      <input
+        type="text"
+        name="company"
+        value={company}
+        onChange={(e) => setCompany(e.target.value)}
+        tabIndex={-1}
+        autoComplete="off"
+        className="absolute -left-[9999px] h-0 w-0 opacity-0"
+        aria-hidden="true"
+      />
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <div className="sm:col-span-1">
           <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink-soft/60">
@@ -115,6 +147,18 @@ export function ContactForm() {
             value={form.email}
             onChange={handleChange}
             placeholder="you@email.com"
+            className="w-full rounded-lg border border-ink/15 bg-cream px-4 py-3 text-sm text-ink outline-none transition-colors focus:border-gold"
+          />
+        </div>
+        <div>
+          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink-soft/60">
+            City / Locality
+          </label>
+          <input
+            name="locality"
+            value={form.locality}
+            onChange={handleChange}
+            placeholder="e.g. Siripuram, Visakhapatnam"
             className="w-full rounded-lg border border-ink/15 bg-cream px-4 py-3 text-sm text-ink outline-none transition-colors focus:border-gold"
           />
         </div>

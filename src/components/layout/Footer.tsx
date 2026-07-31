@@ -8,7 +8,7 @@ import {
 } from "react-icons/fa";
 import { mainNav } from "@/data/nav";
 import { services } from "@/data/services";
-import { siteConfig, telLink, mailLink } from "@/data/site";
+import { siteConfig, telLink, telLink2, mailLink } from "@/data/site";
 
 const socialLinks = [
   { href: siteConfig.social.instagram, label: "Instagram", Icon: FaInstagram },
@@ -90,9 +90,14 @@ export function Footer() {
               </li>
               <li className="flex gap-3">
                 <Phone className="h-5 w-5 shrink-0 text-gold-light" />
-                <a href={telLink()} className="hover:text-cream">
-                  {siteConfig.phone}
-                </a>
+                <span className="flex flex-col">
+                  <a href={telLink()} className="hover:text-cream">
+                    {siteConfig.phone}
+                  </a>
+                  <a href={telLink2()} className="hover:text-cream">
+                    {siteConfig.phone2}
+                  </a>
+                </span>
               </li>
               <li className="flex gap-3">
                 <Mail className="h-5 w-5 shrink-0 text-gold-light" />

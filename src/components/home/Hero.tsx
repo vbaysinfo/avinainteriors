@@ -1,13 +1,16 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, MapPin, Star } from "lucide-react";
-import { FaWhatsapp } from "react-icons/fa";
+import { ArrowRight, Calculator, MapPin, Star } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { HeroIllustration } from "@/components/home/HeroIllustration";
-import { siteConfig, whatsappLink } from "@/data/site";
+import { CalculateNowModal } from "@/components/estimator/CalculateNowModal";
+import { siteConfig } from "@/data/site";
 
 export function Hero() {
+  const [estimatorOpen, setEstimatorOpen] = useState(false);
+
   return (
     <section className="relative flex min-h-[100svh] items-center overflow-hidden bg-ink">
       <div className="absolute inset-0">
@@ -56,18 +59,20 @@ export function Hero() {
             transition={{ duration: 0.7, delay: 0.3 }}
             className="mt-9 flex flex-wrap items-center gap-4"
           >
-            <Button href="/contact" size="lg" icon={<ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />}>
-              Get Free Consultation
+            <Button
+              size="lg"
+              onClick={() => setEstimatorOpen(true)}
+              icon={<Calculator className="h-4 w-4" />}
+            >
+              Calculate Now
             </Button>
             <Button
-              href={whatsappLink()}
-              target="_blank"
-              rel="noopener noreferrer"
+              href="/portfolio"
               size="lg"
-              variant="whatsapp"
-              icon={<FaWhatsapp className="h-4 w-4" />}
+              variant="ghost"
+              icon={<ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />}
             >
-              Chat on WhatsApp
+              View Projects
             </Button>
           </motion.div>
         </div>
@@ -108,6 +113,8 @@ export function Hero() {
         <span className="text-[10px] uppercase tracking-[0.3em]">Scroll</span>
         <span className="h-8 w-px bg-cream/40" />
       </motion.div>
+
+      <CalculateNowModal isOpen={estimatorOpen} onClose={() => setEstimatorOpen(false)} />
     </section>
   );
 }

@@ -13,10 +13,18 @@ export const siteConfig = {
 
   // TODO: replace with your real business phone / WhatsApp number (with country code, no spaces, no plus for wa.me)
   phone: "+91 90000 00000",
+  // TODO: replace with your second business line (e.g. a design consultant's direct number)
+  phone2: "+91 90000 00001",
   whatsappNumber: "919000000000",
   whatsappDefaultMessage:
     "Hi Avina Interiors! I'd like a free interior design consultation.",
   email: "hello@avinainteriors.com",
+
+  // TODO: paste the "Web app URL" from your Google Apps Script deployment here
+  // (bound to https://docs.google.com/spreadsheets/d/1NCJZjsah1UONx3uvQ5JB-eJhgnkhesxMw6iv_RXPIwA).
+  // Leave blank to disable Google Sheets sync — leads still reach you via
+  // WhatsApp/call, this just adds a spreadsheet copy. See README.md.
+  googleSheetsWebAppUrl: "",
 
   address: {
     line1: "Door No. 10-50-12, VIP Road",
@@ -80,4 +88,5 @@ export const whatsappLink = (message?: string) => {
 };
 
 export const telLink = () => `tel:${siteConfig.phone.replace(/\s+/g, "")}`;
+export const telLink2 = () => `tel:${siteConfig.phone2.replace(/\s+/g, "")}`;
 export const mailLink = () => `mailto:${siteConfig.email}`;
