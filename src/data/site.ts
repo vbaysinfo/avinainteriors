@@ -8,7 +8,7 @@ export const siteConfig = {
   legalName: "Avina Interiors Pvt. Ltd.",
   tagline: "Timeless Interiors, Crafted in Visakhapatnam",
   description:
-    "Avina Interiors is a premium interior design studio in Visakhapatnam (Vizag), Andhra Pradesh, crafting bespoke homes, modular kitchens and commercial spaces with a 10-year craftsmanship warranty.",
+    "Avina Interiors is a premium interior design studio in Visakhapatnam (Vizag), Andhra Pradesh, crafting bespoke homes, modular kitchens and commercial spaces with fixed-price, fixed-timeline execution.",
   url: "https://www.avinainteriors.com",
 
   // TODO: replace with your real business phone / WhatsApp number (with country code, no spaces, no plus for wa.me)

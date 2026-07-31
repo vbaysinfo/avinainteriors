@@ -49,8 +49,8 @@ export function Hero() {
             className="mt-6 max-w-xl text-balance text-base leading-relaxed text-cream/75 sm:text-lg"
           >
             Vizag&apos;s premium interior design studio for homes, villas and
-            commercial spaces — free 3D design, in-house execution, and a
-            10-year warranty on every project.
+            commercial spaces — free 3D design, in-house execution, and
+            fixed-price, fixed-timeline contracts.
           </motion.p>
 
           <motion.div

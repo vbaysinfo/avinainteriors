@@ -1,8 +1,7 @@
-import { BadgeCheck, Clock, Factory, PenTool, ShieldCheck, Truck } from "lucide-react";
+import { BadgeCheck, Clock, Factory, PenTool, Truck } from "lucide-react";
 
 const items = [
   { icon: PenTool, label: "Free 3D Design" },
-  { icon: ShieldCheck, label: "10-Year Warranty" },
   { icon: Clock, label: "On-Time Delivery" },
   { icon: Factory, label: "In-House Manufacturing" },
   { icon: BadgeCheck, label: "Fixed-Price Contracts" },

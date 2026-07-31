@@ -21,7 +21,7 @@ export function PortfolioPreview() {
             align="left"
             eyebrow="Our Portfolio"
             title="Recently completed projects across Visakhapatnam"
-            description="A glimpse into homes and workspaces we've designed and delivered — each one backed by a fixed timeline and a 10-year warranty."
+            description="A glimpse into homes and workspaces we've designed and delivered — each one backed by a fixed timeline and transparent pricing."
             className="ml-0"
           />
           <Reveal delay={0.15}>

@@ -31,7 +31,7 @@ export const process = [
     step: "05",
     title: "Quality Handover",
     description:
-      "A rigorous quality checklist and walkthrough before we hand over the keys — backed by a 10-year warranty.",
+      "A rigorous quality checklist and walkthrough before we hand over the keys.",
     icon: "KeyRound",
   },
 ] as const;

@@ -3,7 +3,6 @@ import { Star } from "lucide-react";
 import { PageHero } from "@/components/shared/PageHero";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Reveal } from "@/components/ui/Reveal";
-import { GoogleReviews } from "@/components/social/GoogleReviews";
 import { CTASection } from "@/components/home/CTASection";
 import { testimonials } from "@/data/testimonials";
 
@@ -54,7 +53,6 @@ export default function TestimonialsPage() {
         </div>
       </section>
 
-      <GoogleReviews />
       <CTASection />
     </>
   );

@@ -6,17 +6,18 @@ Next.js 16 (App Router), TypeScript, Tailwind CSS v4 and Framer Motion.
 
 ## What's included
 
-- **11 page types**: Home, About, Services (list + detail), Portfolio (list +
-  detail, with category filtering), Gallery, Testimonials, Blog (list +
-  detail), Contact, 404.
+- **Pages**: Home, Services (list + detail), Portfolio (with category
+  filtering and an image popup/lightbox per project), Testimonials, Contact,
+  404.
 - **Lead generation**: floating WhatsApp button on every page, a WhatsApp-first
-  contact form, click-to-call links, and CTAs throughout.
+  contact form, click-to-call links, a sq.ft cost estimator popup, and CTAs
+  throughout.
 - **SEO**: per-page metadata, Open Graph/Twitter cards, `LocalBusiness` +
   `FAQPage` + `BreadcrumbList` JSON-LD structured data, `sitemap.xml`,
   `robots.txt`, and a web manifest.
-- **Social integration UI**: Instagram feed grid, YouTube/Reels showcase, and
-  a Google Reviews section — see [Connecting live social feeds](#connecting-live-social-feeds)
-  to wire these to your real accounts.
+- **Social integration UI**: Instagram feed grid — see
+  [Connecting live social feeds](#connecting-live-social-feeds) to wire it to
+  your real account.
 - **Design system**: a warm ivory/charcoal/brass palette, Playfair Display +
   Manrope typography, and scroll-triggered Framer Motion animations.
 
@@ -73,16 +74,14 @@ project photos:
 1. Add images to `public/images/...`.
 2. Swap the relevant `<PlaceholderImage tone="..." label="..." />` usage for
    Next's `<Image src="/images/your-photo.jpg" ... fill />` component.
-3. For the portfolio/gallery grids, you can keep the same grid markup and
-   just replace the `PlaceholderImage` call per item.
+3. For the portfolio grid, you can keep the same grid markup and just
+   replace the `PlaceholderImage` call per item.
 
-## Connecting live social feeds
+## Connecting a live Instagram feed
 
-The Instagram, YouTube and Google Reviews sections currently show curated,
-static content so the layout looks production-ready without any API keys.
-To make them live:
-
-**Instagram** (`src/components/social/InstagramFeed.tsx`)
+The Instagram section (`src/components/social/InstagramFeed.tsx`) currently
+shows curated, static content so the layout looks production-ready without
+any API keys. To make it live:
 - Easiest: embed a widget from [SnapWidget](https://snapwidget.com),
   [Elfsight](https://elfsight.com), or [Behold.so](https://behold.so) and
   drop their embed code in place of the grid.
@@ -90,29 +89,21 @@ To make them live:
   with a Business/Creator account and fetch posts server-side in a Server
   Component, caching with `revalidate`.
 
-**YouTube** (`src/components/social/VideoShowcase.tsx`)
-- Replace each tile with a real `<iframe src="https://www.youtube.com/embed/VIDEO_ID">`
-  once you have project walkthrough videos uploaded.
-
-**Google Reviews** (`src/components/social/GoogleReviews.tsx`)
-- Easiest: embed a widget from Elfsight/EmbedSocial.
-- Or use the [Google Places API](https://developers.google.com/maps/documentation/places/web-service/place-details)
-  (Place Details `reviews` field) from a server route, since it requires a
-  server-side API key.
-
 ## The "Calculate Now" cost estimator
 
 The Home page hero's **Calculate Now** button (`src/components/home/Hero.tsx`)
 opens a simple popup (`src/components/estimator/CalculateNowModal.tsx`): the
-visitor enters their space's area in square feet, sees a live-computed
-estimate, then fills in name/phone/email to submit. It shows a summary with
-the estimated cost plus one-tap call and WhatsApp buttons, and pushes the
-lead to your Google Sheet (see below).
+visitor picks a service type (Full Modular or Semi Modular), enters their
+space's area in square feet, sees a live-computed estimate, then fills in
+name/phone/email to submit. It shows a summary with the estimated cost plus
+one-tap call and WhatsApp buttons, and pushes the lead to your Google Sheet
+(see below).
 
-Pricing is `sq.ft × PRICE_PER_SQFT`. Edit `PRICE_PER_SQFT` in
-`src/data/estimator.ts` to your real per-sq.ft rate — that's the only number
-that needs changing. The estimate is explicitly labelled in the UI as
-approximate, not a final quote.
+Pricing is `sq.ft × pricePerSqFt` for the selected service type. Edit
+`serviceTypes` in `src/data/estimator.ts` to change the rates (currently
+₹1,600/sq.ft for Full Modular, ₹900/sq.ft for Semi Modular) or add more
+tiers. The estimate is explicitly labelled in the UI as approximate, not a
+final quote.
 
 ## Saving leads to Google Sheets
 

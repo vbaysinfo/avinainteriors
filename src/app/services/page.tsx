@@ -19,7 +19,7 @@ export default function ServicesPage() {
       <PageHero
         eyebrow="What We Offer"
         title="Interior design services built around how you live"
-        description="From a single modular kitchen to a full-home transformation — every service includes free 3D design and a 10-year warranty."
+        description="From a single modular kitchen to a full-home transformation — every service includes free 3D design and fixed, transparent pricing."
         crumb="Services"
         icon="LayoutGrid"
         tone="forest"

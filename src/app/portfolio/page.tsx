@@ -17,7 +17,7 @@ export default function PortfolioPage() {
       <PageHero
         eyebrow="Our Work"
         title="Interiors we've designed & delivered"
-        description="Every project below was completed on a fixed timeline with a 10-year warranty on modular work."
+        description="Every project below was completed on a fixed timeline with fixed, transparent pricing."
         crumb="Portfolio"
         icon="GalleryHorizontalEnd"
         tone="gold"

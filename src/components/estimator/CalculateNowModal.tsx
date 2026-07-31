@@ -2,11 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { X, Phone, CheckCircle2, Calculator } from "lucide-react";
+import { X, Phone, CheckCircle2, Calculator, Check } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
+import { cn } from "@/lib/utils";
 import { submitLead } from "@/lib/leads";
 import { siteConfig, telLink, telLink2, whatsappLink } from "@/data/site";
-import { calculateEstimate, PRICE_PER_SQFT } from "@/data/estimator";
+import { calculateEstimate, serviceTypes } from "@/data/estimator";
 
 export function CalculateNowModal({
   isOpen,
@@ -16,6 +17,7 @@ export function CalculateNowModal({
   onClose: () => void;
 }) {
   const [sqft, setSqft] = useState("");
+  const [serviceTypeId, setServiceTypeId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -32,6 +34,7 @@ export function CalculateNowModal({
 
   const reset = () => {
     setSqft("");
+    setServiceTypeId(null);
     setName("");
     setPhone("");
     setEmail("");
@@ -56,13 +59,19 @@ export function CalculateNowModal({
   }, [isOpen]);
 
   const sqftNumber = Number(sqft);
-  const estimate = useMemo(() => calculateEstimate(sqftNumber), [sqftNumber]);
+  const selectedServiceType = serviceTypes.find((s) => s.id === serviceTypeId);
+  const estimate = useMemo(
+    () => (serviceTypeId ? calculateEstimate(sqftNumber, serviceTypeId) : null),
+    [sqftNumber, serviceTypeId]
+  );
 
   const phoneValid = /^[0-9+\s-]{7,15}$/.test(phone.trim());
-  const canSubmit = sqftNumber > 0 && name.trim().length > 1 && phoneValid;
+  const canSubmit =
+    sqftNumber > 0 && !!serviceTypeId && name.trim().length > 1 && phoneValid;
 
   const confirmationWhatsappMessage = [
     `Hi ${siteConfig.name}! I just used the cost estimator on your website.`,
+    selectedServiceType ? `Service Type: ${selectedServiceType.label}` : null,
     `Area: ${sqftNumber.toLocaleString("en-IN")} sq.ft`,
     estimate ? `Estimated cost: ${estimate.label}` : null,
     `Name: ${name}`,
@@ -72,13 +81,14 @@ export function CalculateNowModal({
     .join("\n");
 
   const handleSubmit = async () => {
-    if (!canSubmit || company) return; // honeypot tripped — silently drop
+    if (!canSubmit || company || !selectedServiceType) return; // honeypot tripped — silently drop
     setSubmitting(true);
     await submitLead({
       name: name.trim(),
       phone: phone.trim(),
       email: email.trim() || undefined,
-      notes: `Area: ${sqftNumber.toLocaleString("en-IN")} sq.ft @ ₹${PRICE_PER_SQFT}/sq.ft = ${estimate?.label ?? ""}`,
+      packageTier: selectedServiceType.label,
+      notes: `Area: ${sqftNumber.toLocaleString("en-IN")} sq.ft @ ₹${selectedServiceType.pricePerSqFt}/sq.ft = ${estimate?.label ?? ""}`,
       source: "Calculate Now Popup",
     });
     setSubmitting(false);
@@ -135,6 +145,12 @@ export function CalculateNowModal({
                     <div className="mt-6 rounded-2xl border border-ink/10 bg-white/70 p-5 text-left text-sm">
                       <p className="font-semibold text-ink">Your estimate summary</p>
                       <dl className="mt-3 space-y-1.5 text-ink-soft/80">
+                        <div className="flex justify-between gap-3">
+                          <dt>Service Type</dt>
+                          <dd className="text-right font-medium text-ink">
+                            {selectedServiceType?.label}
+                          </dd>
+                        </div>
                         <div className="flex justify-between gap-3">
                           <dt>Area</dt>
                           <dd className="text-right font-medium text-ink">
@@ -202,6 +218,42 @@ export function CalculateNowModal({
                     </div>
 
                     <div className="space-y-4">
+                      <div>
+                        <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink-soft/60">
+                          Service Type *
+                        </label>
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                          {serviceTypes.map((type) => (
+                            <button
+                              key={type.id}
+                              type="button"
+                              onClick={() => setServiceTypeId(type.id)}
+                              className={cn(
+                                "flex flex-col items-start gap-1 rounded-2xl border p-4 text-left transition-all",
+                                serviceTypeId === type.id
+                                  ? "border-gold-deep bg-gold/10 shadow-sm"
+                                  : "border-ink/10 bg-white/60 hover:border-gold/60"
+                              )}
+                            >
+                              <span className="flex w-full items-center justify-between">
+                                <span className="font-display text-lg text-ink">
+                                  {type.label}
+                                </span>
+                                {serviceTypeId === type.id && (
+                                  <Check className="h-4 w-4 text-gold-deep" />
+                                )}
+                              </span>
+                              <span className="text-xs leading-relaxed text-ink-soft/60">
+                                {type.description}
+                              </span>
+                              <span className="mt-1 text-xs font-semibold text-gold-deep">
+                                ₹{type.pricePerSqFt.toLocaleString("en-IN")}/sq.ft
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
                       <div>
                         <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink-soft/60">
                           Total Area (sq.ft) *

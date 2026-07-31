@@ -8,7 +8,6 @@ const points = [
   "In-house design & manufacturing — no third-party markups",
   "Photorealistic 3D visualisation before execution begins",
   "Fixed-price, fixed-timeline contracts with penalty clauses",
-  "10-year warranty on all modular furniture",
   "Dedicated project manager as your single point of contact",
   "Premium hardware from Hettich, Hafele & trusted Indian brands",
 ];

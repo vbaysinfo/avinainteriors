@@ -15,11 +15,6 @@ export const faqs: { question: string; answer: string }[] = [
       "Yes. Every project includes photorealistic 3D walkthroughs of each room so you can visualise materials, colours and layouts and request changes before any execution begins.",
   },
   {
-    question: "What warranty do you offer on modular work?",
-    answer:
-      "All modular furniture (kitchens, wardrobes, TV units) comes with a 10-year warranty covering manufacturing defects, hinges and shutters, backed by our in-house production facility.",
-  },
-  {
     question: "Which areas around Visakhapatnam do you serve?",
     answer:
       "We actively serve Visakhapatnam and surrounding areas including MVP Colony, Madhurawada, Rushikonda, Gajuwaka, Siripuram, Seethammadhara, as well as Rajahmundry and Vizianagaram on request.",

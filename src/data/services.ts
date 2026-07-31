@@ -22,7 +22,6 @@ export const services: Service[] = [
       "Free in-home consultation & space audit",
       "Photorealistic 3D design walkthroughs",
       "Single point of contact from design to handover",
-      "10-year warranty on modular work",
       "Fixed cost, fixed timeline contracts",
     ],
     image: { tone: "gold", label: "Full Home Interiors" },
