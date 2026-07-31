@@ -4,11 +4,11 @@ import { cn } from "@/lib/utils";
 type Tone = "gold" | "forest" | "terracotta" | "ink" | "sand";
 
 const toneStyles: Record<Tone, string> = {
-  gold: "from-[#7c5c22] via-[#ab8438] to-[#dcb567]",
-  forest: "from-[#4d443b] via-[#8d7b6b] to-[#c0b6ad]",
-  terracotta: "from-[#4d4a43] via-[#8c877a] to-[#bfbdb6]",
-  ink: "from-[#1f170f] via-[#342619] to-[#999288]",
-  sand: "from-[#9d9c9d] via-[#d1d0d1] to-[#dad9da]",
+  gold: "from-[#8a6a3f] via-[#b8935f] to-[#dcb888]",
+  forest: "from-[#0f231a] via-[#1f3d2e] to-[#3f6552]",
+  terracotta: "from-[#6b3a1f] via-[#a85c32] to-[#c98a5e]",
+  ink: "from-[#0d0d0d] via-[#1a1a1a] to-[#4a4238]",
+  sand: "from-[#d6c9ad] via-[#e8e1d5] to-[#faf8f5]",
 };
 
 const toneText: Record<Tone, string> = {
@@ -21,6 +21,9 @@ const toneText: Record<Tone, string> = {
 
 type IconName = keyof typeof icons;
 
+// NOTE: This renders a stylised gradient placeholder (not a real photo) so
+// the layout works without stock imagery. Swap for <Image src="..." fill />
+// with real project photos — see README.md "Replace placeholder imagery".
 export function PlaceholderImage({
   tone = "gold",
   label,
@@ -48,6 +51,14 @@ export function PlaceholderImage({
         className
       )}
     >
+      {/* soft directional light, like window light hitting a room */}
+      <div
+        className="absolute inset-0 opacity-70 mix-blend-soft-light"
+        style={{
+          background:
+            "radial-gradient(120% 90% at 15% 0%, rgba(255,255,255,0.85), transparent 55%)",
+        }}
+      />
       <div className="bg-noise absolute inset-0" />
       <Icon
         className={cn(
@@ -56,7 +67,9 @@ export function PlaceholderImage({
         )}
         strokeWidth={1}
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent" />
+      {/* photographic vignette */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-black/10" />
+      <div className="pointer-events-none absolute inset-0 shadow-[inset_0_0_60px_rgba(0,0,0,0.35)]" />
       {showLabel && (
         <div
           className={cn(
