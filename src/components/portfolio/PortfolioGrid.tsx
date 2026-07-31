@@ -4,10 +4,12 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { ProjectCard } from "@/components/portfolio/ProjectCard";
-import { categories, projects, type ProjectCategory } from "@/data/projects";
+import { ProjectLightbox } from "@/components/portfolio/ProjectLightbox";
+import { categories, projects, type Project, type ProjectCategory } from "@/data/projects";
 
 export function PortfolioGrid() {
   const [active, setActive] = useState<ProjectCategory | "All">("All");
+  const [selected, setSelected] = useState<Project | null>(null);
 
   const filtered =
     active === "All" ? projects : projects.filter((p) => p.category === active);
@@ -42,11 +44,17 @@ export function PortfolioGrid() {
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.3 }}
             >
-              <ProjectCard project={project} delay={(i % 3) * 0.06} />
+              <ProjectCard
+                project={project}
+                delay={(i % 3) * 0.06}
+                onOpen={setSelected}
+              />
             </motion.div>
           ))}
         </AnimatePresence>
       </motion.div>
+
+      <ProjectLightbox project={selected} onClose={() => setSelected(null)} />
     </div>
   );
 }

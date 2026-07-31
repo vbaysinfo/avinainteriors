@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { ArrowUpRight, MapPin } from "lucide-react";
 import { PlaceholderImage } from "@/components/ui/PlaceholderImage";
 import { Reveal } from "@/components/ui/Reveal";
@@ -7,15 +6,18 @@ import type { Project } from "@/data/projects";
 export function ProjectCard({
   project,
   delay = 0,
+  onOpen,
 }: {
   project: Project;
   delay?: number;
+  onOpen: (project: Project) => void;
 }) {
   return (
     <Reveal delay={delay}>
-      <Link
-        href={`/portfolio/${project.slug}`}
-        className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-ink/10 bg-white/60 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+      <button
+        type="button"
+        onClick={() => onOpen(project)}
+        className="group relative flex h-full w-full flex-col overflow-hidden rounded-2xl border border-ink/10 bg-white/60 text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
       >
         <div className="relative h-64 overflow-hidden">
           <div className="h-full w-full transition-transform duration-500 group-hover:scale-105">
@@ -36,12 +38,12 @@ export function ProjectCard({
           <div className="mt-5 flex items-center justify-between border-t border-ink/10 pt-4 text-xs text-ink-soft/60">
             <span>{project.area}</span>
             <span className="inline-flex items-center gap-1 font-semibold uppercase tracking-wide text-gold-deep">
-              View Project
+              View Gallery
               <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </span>
           </div>
         </div>
-      </Link>
+      </button>
     </Reveal>
   );
 }

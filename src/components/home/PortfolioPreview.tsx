@@ -1,12 +1,18 @@
+"use client";
+
+import { useState } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Reveal } from "@/components/ui/Reveal";
 import { Button } from "@/components/ui/Button";
 import { ProjectCard } from "@/components/portfolio/ProjectCard";
-import { projects } from "@/data/projects";
+import { ProjectLightbox } from "@/components/portfolio/ProjectLightbox";
+import { projects, type Project } from "@/data/projects";
 
 export function PortfolioPreview() {
   const featured = projects.slice(0, 6);
+  const [selected, setSelected] = useState<Project | null>(null);
+
   return (
     <section className="bg-sand/50 py-20 sm:py-28">
       <div className="container-px mx-auto max-w-7xl">
@@ -27,10 +33,17 @@ export function PortfolioPreview() {
 
         <div className="mt-14 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {featured.map((project, i) => (
-            <ProjectCard key={project.slug} project={project} delay={(i % 3) * 0.1} />
+            <ProjectCard
+              key={project.slug}
+              project={project}
+              delay={(i % 3) * 0.1}
+              onOpen={setSelected}
+            />
           ))}
         </div>
       </div>
+
+      <ProjectLightbox project={selected} onClose={() => setSelected(null)} />
     </section>
   );
 }

@@ -48,8 +48,8 @@ export function WhyUs() {
             ))}
           </ul>
           <Reveal delay={0.4}>
-            <Button href="/about" className="mt-9">
-              More About Us
+            <Button href="/contact" className="mt-9">
+              Get in Touch
             </Button>
           </Reveal>
         </div>
