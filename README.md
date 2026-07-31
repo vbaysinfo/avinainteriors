@@ -43,7 +43,7 @@ edit these instead of hunting through components:
 | File | Controls |
 |---|---|
 | `src/data/site.ts` | Business name, phone (x2), WhatsApp number, email, address, map, social links, Google rating, analytics IDs, Google Sheets webhook URL |
-| `src/data/estimator.ts` | BHK types, rooms, package tiers and pricing rules used by the "Calculate Now" popup |
+| `src/data/estimator.ts` | `PRICE_PER_SQFT` — the single rate used by the "Calculate Now" popup |
 | `src/data/services.ts` | The 8 services shown on `/services` |
 | `src/data/projects.ts` | Portfolio projects shown on `/portfolio` |
 | `src/data/testimonials.ts` | Client testimonials/reviews |
@@ -103,16 +103,16 @@ To make them live:
 ## The "Calculate Now" cost estimator
 
 The Home page hero's **Calculate Now** button (`src/components/home/Hero.tsx`)
-opens a 4-step modal (`src/components/estimator/CalculateNowModal.tsx`):
-BHK type → rooms to design (with quantity selectors for bedrooms/bathrooms)
-→ Basic/Premium/Luxury package → contact details. On submit it shows a
-summary with a rule-based estimated price range, plus one-tap call and
-WhatsApp buttons, and pushes the lead to your Google Sheet (see below).
+opens a simple popup (`src/components/estimator/CalculateNowModal.tsx`): the
+visitor enters their space's area in square feet, sees a live-computed
+estimate, then fills in name/phone/email to submit. It shows a summary with
+the estimated cost plus one-tap call and WhatsApp buttons, and pushes the
+lead to your Google Sheet (see below).
 
-Pricing is entirely rule-based, driven by `src/data/estimator.ts`
-(`bhkTypes`, `roomOptions`, `packageTiers`, `calculateEstimate`) — edit the
-`baseFee`/`baseCost`/`multiplier` numbers to match your real pricing. It is
-explicitly labelled in the UI as a rough estimate, not a final quote.
+Pricing is `sq.ft × PRICE_PER_SQFT`. Edit `PRICE_PER_SQFT` in
+`src/data/estimator.ts` to your real per-sq.ft rate — that's the only number
+that needs changing. The estimate is explicitly labelled in the UI as
+approximate, not a final quote.
 
 ## Saving leads to Google Sheets
 
