@@ -1,10 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Jost } from "next/font/google";
 import "./globals.css";
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
-import { WhatsAppButton } from "@/components/layout/WhatsAppButton";
-import { ScrollToTopButton } from "@/components/layout/ScrollToTopButton";
+import { SiteChrome } from "@/components/layout/SiteChrome";
 import { OrganizationJsonLd } from "@/components/shared/JsonLd";
 import { siteConfig } from "@/data/site";
 
@@ -85,11 +82,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-cream text-ink">
         <OrganizationJsonLd />
-        <Navbar />
-        <main className="flex-1">{children}</main>
-        <Footer />
-        <WhatsAppButton />
-        <ScrollToTopButton />
+        <SiteChrome>{children}</SiteChrome>
       </body>
     </html>
   );
