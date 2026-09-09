@@ -172,7 +172,7 @@ export function normalizeFurnitureCategory(raw: string, itemName: string = ''): 
   if (s.includes('overhead') || s.includes('wall unit') || s.includes('crockery')) return 'below_overhead';
   if (s.includes('tv') || s.includes('entertainment') || s.includes('media')) return 'tv_unit';
   if (s.includes('bed') || s.includes('headboard') || s.includes('mattress') || s.includes('cot')) return 'bed';
-  if (s.includes('sofa') || s.includes('couch') || s.includes('chair') || s.includes('seating')) return 'sitting';
+  if (s.includes('sofa') || s.includes('couch') || s.includes('chair') || s.includes('seating') || s.includes('sitting')) return 'sitting';
   if (s.includes('shelf') || s.includes('bookcase') || s.includes('cabinet') || s.includes('tall')) return 'vertical_box';
   if (s.includes('office') || s.includes('desk') || s.includes('study')) return 'office';
   if (s.includes('pooja') || s.includes('mandir')) return 'pooja';
