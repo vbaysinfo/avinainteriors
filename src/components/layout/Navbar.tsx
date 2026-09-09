@@ -4,8 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Menu, X, Phone } from "lucide-react";
-import { mainNav } from "@/data/nav";
+import { Menu, X, Phone, Ruler } from "lucide-react";
+import { mainNav, utilityNav } from "@/data/nav";
 import { siteConfig, telLink } from "@/data/site";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
@@ -95,7 +95,22 @@ export function Navbar() {
             <Phone className="h-4 w-4" />
             {siteConfig.phone}
           </a>
-          <Button href="/contact" size="sm" variant={transparent ? "ghost" : "primary"}>
+          {utilityNav.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "flex items-center gap-1.5 whitespace-nowrap text-sm font-medium uppercase tracking-wide transition-colors",
+                transparent
+                  ? "text-cream/85 hover:text-cream"
+                  : "text-ink-soft hover:text-gold-deep"
+              )}
+            >
+              <Ruler className="h-4 w-4" />
+              {item.label}
+            </Link>
+          ))}
+          <Button href="/contact" size="sm" variant={transparent ? "ghost" : "primary"} className="whitespace-nowrap">
             Get Free Quote
           </Button>
         </div>
@@ -143,6 +158,15 @@ export function Navbar() {
                 >
                   <Phone className="h-4 w-4" /> {siteConfig.phone}
                 </a>
+                {utilityNav.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className="flex items-center gap-2 text-sm font-medium text-ink-soft"
+                  >
+                    <Ruler className="h-4 w-4" /> {item.label}
+                  </Link>
+                ))}
                 <Button href="/contact" className="w-full">
                   Get Free Quote
                 </Button>

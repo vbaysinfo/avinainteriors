@@ -7,3 +7,7 @@ export const mainNav = [
   { label: "Blog", href: "/blog" },
   { label: "Contact", href: "/contact" },
 ] as const;
+
+export const utilityNav = [
+  { label: "Design Studio", href: "/studio" },
+] as const;
