@@ -86,7 +86,10 @@ export function parseExcelDimension(val: any, fallbackMm: number = 3000): number
     return Math.round(val);
   }
 
-  const str = String(val).trim().toLowerCase();
+  // Drop any parenthetical suffix -- values like "5500 mm (18ft)" or
+  // "4200 mm (13ft 9in)" are the primary mm figure with a human-readable
+  // feet/inches equivalent alongside it, not a second measurement to add in.
+  const str = String(val).replace(/\([^)]*\)/g, '').trim().toLowerCase();
   if (!str) return fallbackMm;
 
   // 1. Check Feet & Inches: e.g. 12'6", 12' 6", 12ft 6in, 12ft, 10'
@@ -258,9 +261,9 @@ export function parseExcelWorkbookToProject(data: ArrayBuffer | Uint8Array): Exc
       // Find room name & dimensions by flexible key matching
       const rawName = row['Room Name'] || row['Room'] || row['Name'] || row['Space'] || row['Room / Space'] || row['Area'] || row['Particulars'];
       const rTypeRaw = row['Room Type'] || row['Type'] || rawName || 'Custom';
-      const widthVal = row['Width'] || row['Width (mm)'] || row['Width (ft)'] || row['Width (in)'] || row['Room Width'] || row['Length'] || row['W'] || row['L'] || row['X'] || 3658;
-      const depthVal = row['Depth'] || row['Depth (mm)'] || row['Depth (ft)'] || row['Depth (in)'] || row['Room Depth'] || row['Breadth'] || row['D'] || row['B'] || row['Y'] || 3048;
-      const heightVal = row['Height'] || row['Height (mm)'] || row['Ceiling Height'] || row['Room Height'] || row['Clear Height'] || row['H'] || 2900;
+      const widthVal = row['Width'] || row['Width (mm)'] || row['Width (mm or ft)'] || row['Width (ft)'] || row['Width (in)'] || row['Room Width'] || row['Length'] || row['W'] || row['L'] || row['X'] || 3658;
+      const depthVal = row['Depth'] || row['Depth (mm)'] || row['Depth (mm or ft)'] || row['Depth (ft)'] || row['Depth (in)'] || row['Room Depth'] || row['Breadth'] || row['D'] || row['B'] || row['Y'] || 3048;
+      const heightVal = row['Height'] || row['Height (mm)'] || row['Ceiling Height (mm)'] || row['Ceiling Height'] || row['Room Height'] || row['Clear Height'] || row['H'] || 2900;
       const wallThickVal = row['Wall Thickness'] || row['Wall Thickness (mm)'] || row['Wall'] || row['Wall Thk'] || 150;
       const notes = row['Notes'] || row['Remarks'] || row['Description'] || '';
 
@@ -291,16 +294,16 @@ export function parseExcelWorkbookToProject(data: ArrayBuffer | Uint8Array): Exc
       const widthVal = row['Width'] || row['Width (mm)'] || row['Item Width'] || row['W'] || 1200;
       const depthVal = row['Depth'] || row['Depth (mm)'] || row['Item Depth'] || row['D'] || 600;
       const heightVal = row['Height'] || row['Height (mm)'] || row['Item Height'] || row['H'] || 2100;
-      const zVal = row['Z Elevation'] || row['Elevation (mm)'] || row['Z (mm)'] || row['Z'] || 0;
+      const zVal = row['Z Elevation (mm)'] || row['Z Elevation'] || row['Elevation (mm)'] || row['Z (mm)'] || row['Z'] || 0;
       const wallSide = row['Wall Placement'] || row['Wall Side'] || row['Wall'] || 'auto';
-      const xVal = row['X Position'] || row['X (mm)'] || row['X'];
-      const yVal = row['Y Position'] || row['Y (mm)'] || row['Y'];
+      const xVal = row['X Position (mm)'] || row['X Position'] || row['X (mm)'] || row['X'];
+      const yVal = row['Y Position (mm)'] || row['Y Position'] || row['Y (mm)'] || row['Y'];
       const rotVal = row['Rotation'] || row['Rotation (deg)'] || row['Angle'] || 0;
 
       const shuttersVal = row['Shutters'] || row['Shutter Count'] || row['No of Shutters'];
       const shelvesVal = row['Shelves'] || row['Shelf Count'] || row['No of Shelves'];
       const drawersVal = row['Drawers'] || row['Drawer Count'] || row['No of Drawers'];
-      const hasLoftVal = row['Has Loft'] || row['Loft (Yes/No)'] || row['Loft'];
+      const hasLoftVal = row['Has Loft (Yes/No)'] || row['Has Loft'] || row['Loft (Yes/No)'] || row['Loft'];
       const loftHeightVal = row['Loft Height'] || row['Loft Height (mm)'] || 600;
       const hasCounterVal = row['Has Countertop'] || row['Countertop'];
       const counterMatVal = row['Countertop Material'] || row['Counter Material'];
@@ -343,11 +346,21 @@ export function parseExcelWorkbookToProject(data: ArrayBuffer | Uint8Array): Exc
     rows.forEach((row) => {
       const roomTarget = row['Room Name'] || row['Room'] || row['Space'] || row['Room / Space'] || (parsedRooms[0] ? parsedRooms[0].roomName : 'Living Room');
       const typeRaw = row['Type'] || row['Opening Type'] || 'Door';
-      const wallSide = (row['Wall Side'] || row['Wall'] || 'bottom').toLowerCase().trim();
+      const wallSideRaw = (row['Wall Side'] || row['Wall'] || row['Wall Placement'] || 'bottom').toLowerCase().trim();
+      // Accept both the plain top/bottom/left/right vocabulary and the
+      // *_wall vocabulary used by the Furniture & Layout sheet (e.g.
+      // "back_wall", "front_wall") so a workbook can use either consistently.
+      const wallSideMap: Record<string, string> = {
+        back_wall: 'top',
+        front_wall: 'bottom',
+        left_wall: 'left',
+        right_wall: 'right',
+      };
+      const wallSide = wallSideMap[wallSideRaw] || wallSideRaw;
       const widthVal = row['Width'] || row['Width (mm)'] || 900;
       const heightVal = row['Height'] || row['Height (mm)'] || 2100;
-      const sillVal = row['Sill Height'] || row['Sill (mm)'] || 900;
-      const offsetVal = row['Offset'] || row['Position (mm)'] || row['X/Y'];
+      const sillVal = row['Sill Height (mm)'] || row['Sill Height'] || row['Sill (mm)'] || 900;
+      const offsetVal = row['Offset (mm)'] || row['Offset'] || row['Position (mm)'] || row['X/Y'];
 
       parsedOpenings.push({
         roomName: String(roomTarget).trim(),
@@ -372,9 +385,9 @@ export function parseExcelWorkbookToProject(data: ArrayBuffer | Uint8Array): Exc
       // Find room name & dimensions
       const rawName = row['Room Name'] || row['Room'] || row['Space'] || row['Room / Space'] || row['Name'] || row['Area Name'] || row['Particulars'] || row['Description'];
       const elemType = String(row['Element Type'] || row['Row Type'] || row['Type'] || row['Category'] || '').toLowerCase();
-      const widthVal = row['Room Width'] || row['Width'] || row['Width (mm)'] || row['Width (ft)'] || row['Width (in)'] || row['Length'] || row['W'] || row['L'] || row['X'];
-      const depthVal = row['Room Depth'] || row['Depth'] || row['Depth (mm)'] || row['Depth (ft)'] || row['Depth (in)'] || row['Breadth'] || row['D'] || row['B'] || row['Y'];
-      const heightVal = row['Room Height'] || row['Height'] || row['Height (mm)'] || row['Ceiling Height'] || row['H'] || 2900;
+      const widthVal = row['Room Width'] || row['Width'] || row['Width (mm)'] || row['Width (mm or ft)'] || row['Width (ft)'] || row['Width (in)'] || row['Length'] || row['W'] || row['L'] || row['X'];
+      const depthVal = row['Room Depth'] || row['Depth'] || row['Depth (mm)'] || row['Depth (mm or ft)'] || row['Depth (ft)'] || row['Depth (in)'] || row['Breadth'] || row['D'] || row['B'] || row['Y'];
+      const heightVal = row['Room Height'] || row['Height'] || row['Height (mm)'] || row['Ceiling Height (mm)'] || row['Ceiling Height'] || row['H'] || 2900;
       const wallThickVal = row['Wall Thickness'] || row['Wall Thickness (mm)'] || row['Wall'] || row['Thk'] || 150;
       const notes = row['Notes'] || row['Remarks'] || row['Description'] || '';
 
