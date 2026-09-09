@@ -107,6 +107,12 @@ export interface ParametricDetails {
   slidePairs?: number;
   handlesCount?: number;
   legsCount?: number;
+  // 'full_modular' (default): complete factory-made carcass box (sides,
+  // top, bottom, back, shelves) + shutters, cut and supplied entirely by
+  // the factory. 'semi_modular': only a wooden frame + shutter are
+  // supplied -- the box itself is civil/masonry-built on site, so the
+  // cutting list skips carcass panels and lists a frame batten instead.
+  constructionType?: 'full_modular' | 'semi_modular';
 }
 
 export interface FurnitureItem {

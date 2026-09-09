@@ -1837,6 +1837,42 @@ export const PropertyInspector: React.FC<PropertyInspectorProps> = ({
           </div>
         </div>
 
+        {/* 3b. Construction Type -- Full Modular (factory carcass box) vs Semi Modular (frame + shutter only, box is civil-built) */}
+        <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-2">
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+            Construction Type
+          </span>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => handleParametricChange('constructionType', 'full_modular')}
+              className={`px-2 py-1.5 rounded border text-[11px] font-semibold transition-colors ${
+                (selectedFurniture.parametric.constructionType || 'full_modular') === 'full_modular'
+                  ? 'bg-blue-600 border-blue-600 text-white'
+                  : 'bg-white border-slate-300 text-slate-600 hover:border-blue-400'
+              }`}
+            >
+              Full Modular
+            </button>
+            <button
+              type="button"
+              onClick={() => handleParametricChange('constructionType', 'semi_modular')}
+              className={`px-2 py-1.5 rounded border text-[11px] font-semibold transition-colors ${
+                selectedFurniture.parametric.constructionType === 'semi_modular'
+                  ? 'bg-amber-600 border-amber-600 text-white'
+                  : 'bg-white border-slate-300 text-slate-600 hover:border-amber-400'
+              }`}
+            >
+              Semi Modular
+            </button>
+          </div>
+          <p className="text-[9.5px] text-slate-400 leading-snug">
+            {selectedFurniture.parametric.constructionType === 'semi_modular'
+              ? 'Cutting list skips the plywood carcass (box is civil/masonry-built) and lists only a wooden frame batten + shutters.'
+              : 'Cutting list includes the full factory-made carcass box (sides, top, bottom, back, shelves) plus shutters.'}
+          </p>
+        </div>
+
         {/* 4. Top Loft Module & Countertop Toggles */}
         <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-3">
           <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">

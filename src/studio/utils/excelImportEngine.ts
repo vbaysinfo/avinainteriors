@@ -41,6 +41,22 @@ export interface ParsedFurnitureRow {
   countertopMaterial?: string;
   countertopThicknessMm?: number;
   skirtingHeightMm?: number;
+  constructionType?: 'full_modular' | 'semi_modular';
+}
+
+/**
+ * Normalizes the "Construction Type" Excel column (not to be confused
+ * with "Module Type", which is a Category alias). Semi Modular = frame +
+ * shutter only (box is civil/masonry-built on site). Full Modular =
+ * complete factory carcass box + shutters. Defaults to 'full_modular'
+ * for any unrecognized or blank value.
+ */
+export function normalizeConstructionType(raw: string): 'full_modular' | 'semi_modular' {
+  const s = (raw || '').toLowerCase().trim();
+  if (s.includes('semi') || s.includes('frame') || s.includes('shutter only') || s.includes('civil')) {
+    return 'semi_modular';
+  }
+  return 'full_modular';
 }
 
 export interface ParsedOpeningRow {
@@ -298,6 +314,7 @@ export function parseExcelWorkbookToProject(data: ArrayBuffer | Uint8Array): Exc
       const wallSide = row['Wall Placement'] || row['Wall Side'] || row['Wall'] || 'auto';
       const xVal = row['X Position (mm)'] || row['X Position'] || row['X (mm)'] || row['X'];
       const yVal = row['Y Position (mm)'] || row['Y Position'] || row['Y (mm)'] || row['Y'];
+      const constructionTypeRaw = row['Construction Type'] || row['Modular Type'] || '';
       const rotVal = row['Rotation'] || row['Rotation (deg)'] || row['Angle'] || 0;
 
       const shuttersVal = row['Shutters'] || row['Shutter Count'] || row['No of Shutters'];
@@ -334,6 +351,7 @@ export function parseExcelWorkbookToProject(data: ArrayBuffer | Uint8Array): Exc
           hasCountertop: String(hasCounterVal).toLowerCase().includes('y') || String(hasCounterVal) === '1' || String(hasCounterVal).toLowerCase().includes('true'),
           countertopMaterial: counterMatVal ? String(counterMatVal) : undefined,
           countertopThicknessMm: parseExcelDimension(row['Countertop Thickness'] || 20, 20),
+          constructionType: normalizeConstructionType(String(constructionTypeRaw)),
           skirtingHeightMm: parseExcelDimension(row['Skirting Height'] || 75, 75),
         });
       }
@@ -669,6 +687,7 @@ export function parseExcelWorkbookToProject(data: ArrayBuffer | Uint8Array): Exc
             hingesCount: calculatedShutters * (h > 2100 ? 4 : 3),
             slidePairs: calculatedDrawers,
             handlesCount: calculatedShutters + calculatedDrawers,
+            constructionType: fItem.constructionType || 'full_modular',
             legsCount: Math.ceil(w / 600) * 2,
           },
           materials: {

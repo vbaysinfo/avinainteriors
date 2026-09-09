@@ -129,51 +129,34 @@ export function generateCuttingList(furnitureList: FurnitureItem[]): CuttingItem
     const shutterCount = parametric.shutterCount || 0;
     const drawerCount = parametric.drawerCount || 0;
     const shelfCount = parametric.shelfCount || 0;
+    const isSemiModular = parametric.constructionType === 'semi_modular';
 
-    // 1. Left & Right Side Panels (Carcass)
-    cuttingItems.push({
-      id: `${id}_side_panels`,
-      partName: 'Side Panel (Carcase)',
-      parentFurnitureId: id,
-      parentFurnitureName: name,
-      category,
-      qty: 2,
-      length: height,
-      width: depth,
-      thickness: carcassThick,
-      material: materials.carcassMaterial || '18mm BWP Plywood',
-      finish: materials.carcassFinish || 'Frosty White',
-      color: '#F3F4F6',
-      edgeBandingSides: { top: false, bottom: false, left: true, right: true },
-      edgeBandingThickness: 0.8,
-      grainDirection: 'length',
-      remarks: 'Pre-drilled 32mm system holes for shelf pins',
-    });
-
-    // 2. Top & Bottom Carcass Panels
-    const topBottomWidth = Math.max(100, width - 2 * carcassThick);
-    cuttingItems.push({
-      id: `${id}_bottom_panel`,
-      partName: 'Bottom Panel (Carcase)',
-      parentFurnitureId: id,
-      parentFurnitureName: name,
-      category,
-      qty: 1,
-      length: topBottomWidth,
-      width: depth,
-      thickness: carcassThick,
-      material: materials.carcassMaterial || '18mm BWP Plywood',
-      finish: materials.carcassFinish || 'Frosty White',
-      color: '#F3F4F6',
-      edgeBandingSides: { top: true, bottom: false, left: false, right: false },
-      edgeBandingThickness: 0.8,
-      grainDirection: 'length',
-    });
-
-    if (item.category !== 'kitchen' || !parametric.hasCountertop) {
+    if (!isSemiModular) {
+      // 1. Left & Right Side Panels (Carcass)
       cuttingItems.push({
-        id: `${id}_top_panel`,
-        partName: 'Top Panel (Carcase)',
+        id: `${id}_side_panels`,
+        partName: 'Side Panel (Carcase)',
+        parentFurnitureId: id,
+        parentFurnitureName: name,
+        category,
+        qty: 2,
+        length: height,
+        width: depth,
+        thickness: carcassThick,
+        material: materials.carcassMaterial || '18mm BWP Plywood',
+        finish: materials.carcassFinish || 'Frosty White',
+        color: '#F3F4F6',
+        edgeBandingSides: { top: false, bottom: false, left: true, right: true },
+        edgeBandingThickness: 0.8,
+        grainDirection: 'length',
+        remarks: 'Pre-drilled 32mm system holes for shelf pins',
+      });
+
+      // 2. Top & Bottom Carcass Panels
+      const topBottomWidth = Math.max(100, width - 2 * carcassThick);
+      cuttingItems.push({
+        id: `${id}_bottom_panel`,
+        partName: 'Bottom Panel (Carcase)',
         parentFurnitureId: id,
         parentFurnitureName: name,
         category,
@@ -188,33 +171,53 @@ export function generateCuttingList(furnitureList: FurnitureItem[]): CuttingItem
         edgeBandingThickness: 0.8,
         grainDirection: 'length',
       });
-    }
 
-    // 3. Back Panel
-    if (backThick > 0) {
-      cuttingItems.push({
-        id: `${id}_back_panel`,
-        partName: 'Back Ply Panel',
-        parentFurnitureId: id,
-        parentFurnitureName: name,
-        category,
-        qty: 1,
-        length: Math.max(100, height - 20),
-        width: Math.max(100, width - 20),
-        thickness: backThick,
-        material: `${backThick}mm Back Ply`,
-        finish: 'White Melamine 1-side',
-        color: '#FFFFFF',
-        edgeBandingSides: { top: false, bottom: false, left: false, right: false },
-        edgeBandingThickness: 0,
-        grainDirection: 'length',
-        remarks: 'Rebate / Groove 8mm deep into sides',
-      });
+      if (item.category !== 'kitchen' || !parametric.hasCountertop) {
+        cuttingItems.push({
+          id: `${id}_top_panel`,
+          partName: 'Top Panel (Carcase)',
+          parentFurnitureId: id,
+          parentFurnitureName: name,
+          category,
+          qty: 1,
+          length: topBottomWidth,
+          width: depth,
+          thickness: carcassThick,
+          material: materials.carcassMaterial || '18mm BWP Plywood',
+          finish: materials.carcassFinish || 'Frosty White',
+          color: '#F3F4F6',
+          edgeBandingSides: { top: true, bottom: false, left: false, right: false },
+          edgeBandingThickness: 0.8,
+          grainDirection: 'length',
+        });
+      }
+
+      // 3. Back Panel
+      if (backThick > 0) {
+        cuttingItems.push({
+          id: `${id}_back_panel`,
+          partName: 'Back Ply Panel',
+          parentFurnitureId: id,
+          parentFurnitureName: name,
+          category,
+          qty: 1,
+          length: Math.max(100, height - 20),
+          width: Math.max(100, width - 20),
+          thickness: backThick,
+          material: `${backThick}mm Back Ply`,
+          finish: 'White Melamine 1-side',
+          color: '#FFFFFF',
+          edgeBandingSides: { top: false, bottom: false, left: false, right: false },
+          edgeBandingThickness: 0,
+          grainDirection: 'length',
+          remarks: 'Rebate / Groove 8mm deep into sides',
+        });
+      }
     }
 
     // 4. Internal Vertical Dividers (if multi-shutter wardrobe / unit)
     const dividerCount = shutterCount > 1 ? Math.floor((shutterCount - 1)) : 0;
-    if (dividerCount > 0 && category === 'wardrobe') {
+    if (!isSemiModular && dividerCount > 0 && category === 'wardrobe') {
       const dividerHeight = Math.max(100, height - 2 * carcassThick);
       cuttingItems.push({
         id: `${id}_dividers`,
@@ -236,7 +239,7 @@ export function generateCuttingList(furnitureList: FurnitureItem[]): CuttingItem
     }
 
     // 5. Internal Shelves
-    if (shelfCount > 0) {
+    if (!isSemiModular && shelfCount > 0) {
       const compartments = dividerCount + 1;
       const shelfSpan = Math.max(100, Math.round((width - 2 * carcassThick - dividerCount * carcassThick) / compartments));
       cuttingItems.push({
@@ -255,6 +258,39 @@ export function generateCuttingList(furnitureList: FurnitureItem[]): CuttingItem
         edgeBandingSides: { top: true, bottom: true, left: true, right: true },
         edgeBandingThickness: 0.8,
         grainDirection: 'length',
+      });
+    }
+
+    // 5b. Wooden Frame Batten (semi-modular only) -- the box itself is
+    // civil/masonry-built on site, so instead of carcass panels we list a
+    // single running-length frame member fixed around the opening.
+    if (isSemiModular) {
+      const frameSection = 50; // mm, standard chowkat batten width
+      const frameRunningLengthMm = 2 * (width + height);
+      cuttingItems.push({
+        id: `${id}_frame_batten`,
+        partName: 'Wooden Frame (Chowkat) Batten',
+        parentFurnitureId: id,
+        parentFurnitureName: name,
+        category,
+        qty: 1,
+        length: frameRunningLengthMm,
+        width: frameSection,
+        thickness: 20,
+        // "Carcass Material"/"Carcass Finish" default to a plywood sheet
+        // spec that doesn't apply to a solid-wood frame batten -- only
+        // honor them here if the user actually overrode the default.
+        material: materials.carcassMaterial && materials.carcassMaterial !== '18mm BWP Plywood'
+          ? materials.carcassMaterial
+          : 'Sal Wood Frame Section',
+        finish: materials.carcassFinish && materials.carcassFinish !== 'Frosty White'
+          ? materials.carcassFinish
+          : 'Melamine Polish',
+        color: '#C9A876',
+        edgeBandingSides: { top: false, bottom: false, left: false, right: false },
+        edgeBandingThickness: 0,
+        grainDirection: 'length',
+        remarks: `Semi-modular: running length only (2x width + 2x height = ${frameRunningLengthMm}mm). Box is civil/masonry-built on site, not supplied.`,
       });
     }
 
