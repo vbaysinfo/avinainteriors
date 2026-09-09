@@ -376,6 +376,8 @@ export interface QuotationSummary {
   shutterCost: number;
   countertopAreaSqFt: number;
   countertopCost: number;
+  frameRunningFt: number;
+  frameCost: number;
   hardwareCost: number;
   edgeBandingMeters: number;
   edgeBandingCost: number;
@@ -390,46 +392,65 @@ export interface QuotationSummary {
   }>;
 }
 
+/**
+ * Costs are derived from generateCuttingList()'s actual panel/batten
+ * output (the same source the cutting list and Material & Sheet Usage
+ * tab use), not re-estimated from raw item geometry -- this is what
+ * makes a semi-modular item (no carcass panels, just a frame batten +
+ * shutters) correctly cost less than a full-modular item of the same
+ * width/height/depth, instead of always being billed for a full box.
+ */
 export function calculateQuotation(furnitureList: FurnitureItem[]): QuotationSummary {
+  const cuttingItems = generateCuttingList(furnitureList);
+
   let totalCarcassSqFt = 0;
   let totalShutterSqFt = 0;
   let totalCounterSqFt = 0;
+  let totalFrameRunningFt = 0;
   let totalEdgeMeters = 0;
+
+  cuttingItems.forEach((ci) => {
+    const pieceSqFt = ((ci.length / 304.8) * (ci.width / 304.8)) * ci.qty;
+
+    if (ci.partName.includes('Frame') && ci.partName.includes('Batten')) {
+      totalFrameRunningFt += (ci.length / 304.8) * ci.qty;
+    } else if (ci.partName.includes('Countertop')) {
+      totalCounterSqFt += pieceSqFt;
+    } else if (ci.partName.includes('Shutter') || ci.partName.includes('Drawer Front')) {
+      totalShutterSqFt += pieceSqFt;
+    } else {
+      // Side/Top/Bottom/Back panels, dividers, shelves -- all carcass.
+      totalCarcassSqFt += pieceSqFt;
+    }
+
+    if (ci.edgeBandingThickness > 0) {
+      const sides = ci.edgeBandingSides;
+      const runningMm =
+        (sides.top || sides.bottom ? ci.width : 0) * ((sides.top ? 1 : 0) + (sides.bottom ? 1 : 0)) +
+        (sides.left || sides.right ? ci.length : 0) * ((sides.left ? 1 : 0) + (sides.right ? 1 : 0));
+      totalEdgeMeters += (runningMm / 1000) * ci.qty;
+    }
+  });
+
   let totalHinges = 0;
   let totalSlides = 0;
   let totalHandles = 0;
-
   const itemizedFurniture: QuotationSummary['itemizedFurniture'] = [];
 
   furnitureList.forEach((item) => {
     const wFt = item.width / 304.8;
     const hFt = item.height / 304.8;
-    const dFt = item.depth / 304.8;
-
-    // Carcass surface area approx (2 sides + top + bottom + back + shelves)
-    const carcassSqFt = 2 * (hFt * dFt) + 2 * (wFt * dFt) + (wFt * hFt) + (item.parametric.shelfCount || 0) * (wFt * dFt);
-    totalCarcassSqFt += carcassSqFt;
-
-    // Shutter area
-    const shutterSqFt = (item.parametric.shutterCount || 0) > 0 ? (wFt * hFt) : 0;
-    totalShutterSqFt += shutterSqFt;
-
-    // Counter area
-    if (item.parametric.hasCountertop) {
-      const counterSqFt = wFt * dFt;
-      totalCounterSqFt += counterSqFt;
-    }
-
-    // Edge banding (meters)
-    const edgeMeters = ((item.width * 2 + item.height * 2) / 1000) * ((item.parametric.shutterCount || 1) + 2);
-    totalEdgeMeters += edgeMeters;
+    const isSemiModular = item.parametric.constructionType === 'semi_modular';
 
     totalHinges += item.parametric.hingesCount || 0;
     totalSlides += item.parametric.slidePairs || 0;
     totalHandles += item.parametric.handlesCount || 0;
 
+    // Frame + shutter only labor/material runs well below a full carcass
+    // box's blended per-sq.ft rate.
+    const elevationRate = isSemiModular ? 650 : 1650;
     const itemSqFt = Math.round((wFt * hFt) * 10) / 10;
-    const itemCost = Math.round(itemSqFt * 1650); // Average interior rate per elevation sq.ft
+    const itemCost = Math.round(itemSqFt * elevationRate);
 
     itemizedFurniture.push({
       id: item.id,
@@ -443,6 +464,7 @@ export function calculateQuotation(furnitureList: FurnitureItem[]): QuotationSum
   const carcassRate = 160; // Rs/SqFt
   const shutterRate = 310; // Rs/SqFt
   const counterRate = 420; // Rs/SqFt
+  const frameRate = 85; // Rs/running ft, Sal wood frame section
   const hingePrice = 280; // Soft close hinge pair
   const slidePrice = 1850; // Tandem soft close slide
   const handlePrice = 250; // G-profile/Lip handle
@@ -451,12 +473,13 @@ export function calculateQuotation(furnitureList: FurnitureItem[]): QuotationSum
   const carcassCost = Math.round(totalCarcassSqFt * carcassRate);
   const shutterCost = Math.round(totalShutterSqFt * shutterRate);
   const countertopCost = Math.round(totalCounterSqFt * counterRate);
+  const frameCost = Math.round(totalFrameRunningFt * frameRate);
   const edgeBandingCost = Math.round(totalEdgeMeters * edgeRate);
   const hardwareCost = Math.round(
     (totalHinges / 2) * hingePrice + totalSlides * slidePrice + totalHandles * handlePrice + furnitureList.length * 400
   );
 
-  const subtotal = carcassCost + shutterCost + countertopCost + edgeBandingCost + hardwareCost;
+  const subtotal = carcassCost + shutterCost + countertopCost + frameCost + edgeBandingCost + hardwareCost;
   const laborCost = Math.round(subtotal * 0.18);
   const totalCost = subtotal + laborCost;
 
@@ -467,6 +490,8 @@ export function calculateQuotation(furnitureList: FurnitureItem[]): QuotationSum
     shutterCost,
     countertopAreaSqFt: Math.round(totalCounterSqFt * 10) / 10,
     countertopCost,
+    frameRunningFt: Math.round(totalFrameRunningFt * 10) / 10,
+    frameCost,
     hardwareCost,
     edgeBandingMeters: Math.round(totalEdgeMeters),
     edgeBandingCost,

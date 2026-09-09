@@ -839,6 +839,19 @@ export const CuttingListPanel: React.FC<CuttingListPanelProps> = ({ project, act
                   {quotation.shutterAreaSqFt} Sq.Ft @ ₹310
                 </span>
               </div>
+              {quotation.frameRunningFt > 0 && (
+                <div className="p-4 rounded-xl border shadow-sm bg-amber-50 border-amber-200">
+                  <span className="text-[11px] font-mono text-amber-700">
+                    SEMI-MODULAR FRAME
+                  </span>
+                  <div className="text-base font-bold mt-1 text-slate-900">
+                    ₹{quotation.frameCost.toLocaleString()}
+                  </div>
+                  <span className="text-[10px] text-amber-700">
+                    {quotation.frameRunningFt} Running Ft @ ₹85
+                  </span>
+                </div>
+              )}
               <div className="p-4 rounded-xl border shadow-sm bg-white border-slate-200">
                 <span className="text-[11px] font-mono text-slate-500">
                   HARDWARE & RUNNERS
