@@ -358,8 +358,29 @@ function tryParsePriceQuotationSheet(
       continue;
     }
 
+    // A "Tandem/Tandom Box" row is the drawer-running-gear line for the
+    // cabinet listed just above it (Tandem Box is a drawer system type,
+    // not a separate piece of furniture standing somewhere else) --
+    // fold it into that cabinet the same way as an Expo row.
+    if ((itemLower.includes('tandem') || itemLower.includes('tandom')) && lastCabinetLikeIdx !== null) {
+      const parent = parsedFurniture[lastCabinetLikeIdx];
+      parent.drawerCount = (parent.drawerCount || 0) + 1;
+      const note = `${itemCell}: ${inr(amount)}`;
+      parent.description = parent.description ? `${parent.description}; ${note}` : note;
+      continue;
+    }
+
     const category = normalizeFurnitureCategory(`${itemCell} ${roomForItem}`, itemCell);
     const depthMm = hasDepth ? Math.round(depthFt * 304.8) : (defaultDepthByCategory[category] ?? 400);
+    // This sheet has no elevation column, but "Loft"/"Overhead" units are
+    // always mounted near the ceiling, never sitting on the floor --
+    // without this they'd default to Z=0 and visually/collision-wise
+    // fight with the floor-level units on the same wall.
+    const isOverheadItem = itemLower.includes('loft') || itemLower.includes('overhead');
+    const assumedCeilingMm = 2900;
+    const elevationZMm = isOverheadItem
+      ? Math.max(1450, assumedCeilingMm - heightMm - 10)
+      : undefined;
 
     parsedFurniture.push({
       roomName: roomForItem,
@@ -368,6 +389,7 @@ function tryParsePriceQuotationSheet(
       widthMm,
       depthMm,
       heightMm,
+      elevationZMm,
       wallPlacement: inferWallPlacementFromName(itemCell),
       constructionType: hasDepth ? 'full_modular' : 'semi_modular',
       description: hasDepth
@@ -384,13 +406,46 @@ function tryParsePriceQuotationSheet(
 
   // This sheet has no room dimensions at all -- only furniture costs --
   // so estimate a room size generous enough to hold what landed in it.
+  // Mirrors how the room-building step below actually buckets items onto
+  // walls (left/right vs. back/front, and floor vs. overhead within
+  // each), so the estimated room is wide/deep enough for each wall's
+  // own busiest band instead of a single global guess -- that's what
+  // was causing "out of bounds" items on rooms with many wall pieces.
   roomsSeen.forEach((room, idx) => {
     const itemsInRoom = parsedFurniture.filter((f) => f.roomName === room);
     if (itemsInRoom.length === 0) return;
+
+    // Four independent walls, each with its own floor/overhead band --
+    // left_wall and right_wall never share space (opposite sides of the
+    // room), so their needs must be maxed against each other, not summed.
+    const span = {
+      left_wall: { floor: 0, overhead: 0 },
+      right_wall: { floor: 0, overhead: 0 },
+      back_wall: { floor: 0, overhead: 0 },
+      front_wall: { floor: 0, overhead: 0 },
+    };
+    itemsInRoom.forEach((f) => {
+      const zBand: 'floor' | 'overhead' = (f.elevationZMm || 0) >= 1200 ? 'overhead' : 'floor';
+      const wall: keyof typeof span =
+        f.wallPlacement === 'left_wall' || (f.wallPlacement === 'auto' && f.category === 'wardrobe') ? 'left_wall'
+        : f.wallPlacement === 'right_wall' ? 'right_wall'
+        : f.wallPlacement === 'front_wall' || f.category === 'tv_unit' ? 'front_wall'
+        : f.wallPlacement === 'center' || f.category === 'bed' ? 'back_wall' // centered items don't need extra wall span, but still count toward room width
+        : 'back_wall';
+      // The renderer always draws width as the X-extent and depth as the
+      // Y-extent (no real rotation) -- so a left/right-wall item's
+      // along-wall (Y-axis / room depth) footprint is its depth, while a
+      // back/front-wall item's along-wall (X-axis / room width)
+      // footprint is its width. Must match the placement logic below.
+      const alongWallSpan = (wall === 'left_wall' || wall === 'right_wall') ? f.depthMm : f.widthMm;
+      span[wall][zBand] += alongWallSpan + 50;
+    });
+
     const maxItemWidth = Math.max(...itemsInRoom.map((f) => f.widthMm));
-    const totalWidth = itemsInRoom.reduce((sum, f) => sum + f.widthMm, 0);
-    const widthMm = Math.max(3000, Math.min(6500, Math.round(totalWidth / 2) + 900, maxItemWidth + 1800));
-    const depthMm = Math.max(2700, Math.round(widthMm * 0.82));
+    const neededDepth = Math.max(span.left_wall.floor, span.left_wall.overhead, span.right_wall.floor, span.right_wall.overhead);
+    const neededWidth = Math.max(span.back_wall.floor, span.back_wall.overhead, span.front_wall.floor, span.front_wall.overhead, maxItemWidth);
+    const widthMm = Math.min(7500, Math.max(3000, neededWidth + 900));
+    const depthMm = Math.min(6500, Math.max(2700, neededDepth + 900));
 
     parsedRooms.push({
       rowNumber: idx + 1,
@@ -818,10 +873,59 @@ export function parseExcelWorkbookToProject(data: ArrayBuffer | Uint8Array): Exc
     const furniture: FurnitureItem[] = [];
 
     if (roomFurnItems.length > 0) {
-      // Place items specified in Excel
-      let currentBackWallX = 100;
-      let currentLeftWallY = 100;
-      let currentRightWallY = 100;
+      // Place items specified in Excel. Each wall gets independent
+      // running cursors for floor-level vs. overhead/loft-level items
+      // (e.g. a wall-mounted loft above a wardrobe, or overhead kitchen
+      // cabinets above a base counter): items in different Z bands don't
+      // physically occupy the same footprint, so they must not push each
+      // other along the wall the way two floor-level items would.
+      type WallBucket = 'left_wall' | 'right_wall' | 'back_wall' | 'front_wall' | 'center';
+      const zBandOf = (fItem: ParsedFurnitureRow): 'floor' | 'overhead' =>
+        (fItem.elevationZMm || 0) >= 1200 ? 'overhead' : 'floor';
+      const bucketOf = (fItem: ParsedFurnitureRow): WallBucket => {
+        const placement = fItem.wallPlacement || 'auto';
+        if (placement === 'left_wall' || (placement === 'auto' && (fItem.category === 'wardrobe' || fItem.name.toLowerCase().includes('wardrobe')))) {
+          return 'left_wall';
+        } else if (placement === 'right_wall') {
+          return 'right_wall';
+        } else if (placement === 'center' || fItem.category === 'bed') {
+          return 'center';
+        } else if (placement === 'front_wall' || fItem.category === 'tv_unit') {
+          return 'front_wall';
+        }
+        return 'back_wall';
+      };
+
+      // Sum each wall+Z-band's total item span first so the group can be
+      // centered along the wall -- a single item still lands centered,
+      // and several items distribute across the wall without overlapping.
+      // Note: this renderer never actually rotates a furniture box to
+      // match "rotation" -- it always draws width as the X-extent and
+      // depth as the Y-extent. So a left/right-wall item's *along-wall*
+      // span (which runs along Y, i.e. room depth) is its own depthMm,
+      // not its widthMm -- using widthMm there was placing e.g. a
+      // 2800mm-wide loft shutter as if it were only as long as its
+      // depth, understating its footprint and running it past the wall.
+      const groupSpan = {
+        left_wall: { floor: 0, overhead: 0 },
+        right_wall: { floor: 0, overhead: 0 },
+        back_wall: { floor: 0, overhead: 0 },
+        front_wall: { floor: 0, overhead: 0 },
+      };
+      roomFurnItems.forEach((fItem) => {
+        if (fItem.xMm !== undefined && fItem.yMm !== undefined) return;
+        const bucket = bucketOf(fItem);
+        if (bucket === 'center') return;
+        const alongWallSpan = (bucket === 'left_wall' || bucket === 'right_wall') ? fItem.depthMm : fItem.widthMm;
+        groupSpan[bucket][zBandOf(fItem)] += alongWallSpan + 50;
+      });
+      const centeredStart = (available: number, span: number) => Math.max(100, Math.round((available - span) / 2));
+      const wallCursors = {
+        left_wall: { floor: centeredStart(depthMm, groupSpan.left_wall.floor), overhead: centeredStart(depthMm, groupSpan.left_wall.overhead) },
+        right_wall: { floor: centeredStart(depthMm, groupSpan.right_wall.floor), overhead: centeredStart(depthMm, groupSpan.right_wall.overhead) },
+        back_wall: { floor: centeredStart(widthMm, groupSpan.back_wall.floor), overhead: centeredStart(widthMm, groupSpan.back_wall.overhead) },
+        front_wall: { floor: centeredStart(widthMm, groupSpan.front_wall.floor), overhead: centeredStart(widthMm, groupSpan.front_wall.overhead) },
+      };
 
       roomFurnItems.forEach((fItem, fIdx) => {
         let x = fItem.xMm;
@@ -834,32 +938,39 @@ export function parseExcelWorkbookToProject(data: ArrayBuffer | Uint8Array): Exc
 
         // Auto-calculate position if X/Y not provided
         if (x === undefined || y === undefined) {
-          const placement = fItem.wallPlacement || 'auto';
+          const bucket = bucketOf(fItem);
+          const zBand = zBandOf(fItem);
 
-          if (placement === 'left_wall' || (placement === 'auto' && (fItem.category === 'wardrobe' || fItem.name.toLowerCase().includes('wardrobe')))) {
+          if (bucket === 'left_wall') {
+            // The renderer always draws width as the X-extent and depth
+            // as the Y-extent (it doesn't actually rotate the box), so
+            // the item's own width -- not depth -- is what determines
+            // how far it protrudes from the wall, and depth is what
+            // determines its along-wall footprint for stacking.
             x = 80;
-            y = currentLeftWallY;
+            y = wallCursors.left_wall[zBand];
             rot = 90;
-            currentLeftWallY += w + 50;
-          } else if (placement === 'right_wall') {
-            x = widthMm - d - 80;
-            y = currentRightWallY;
+            wallCursors.left_wall[zBand] += d + 50;
+          } else if (bucket === 'right_wall') {
+            x = widthMm - w - 80;
+            y = wallCursors.right_wall[zBand];
             rot = 270;
-            currentRightWallY += w + 50;
-          } else if (placement === 'center' || fItem.category === 'bed') {
+            wallCursors.right_wall[zBand] += d + 50;
+          } else if (bucket === 'center') {
             x = Math.max(100, Math.round(widthMm / 2 - w / 2));
             y = 100; // headboard on top wall
             rot = 0;
-          } else if (placement === 'front_wall' || fItem.category === 'tv_unit') {
-            x = Math.max(100, Math.round(widthMm / 2 - w / 2));
+          } else if (bucket === 'front_wall') {
+            x = wallCursors.front_wall[zBand];
             y = Math.max(100, depthMm - d - 100);
             rot = 180;
+            wallCursors.front_wall[zBand] += w + 50;
           } else {
             // Default top back wall placement
-            x = currentBackWallX;
+            x = wallCursors.back_wall[zBand];
             y = 80;
             rot = 0;
-            currentBackWallX += w + 50;
+            wallCursors.back_wall[zBand] += w + 50;
           }
         }
 
