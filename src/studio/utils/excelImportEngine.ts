@@ -42,6 +42,7 @@ export interface ParsedFurnitureRow {
   countertopThicknessMm?: number;
   skirtingHeightMm?: number;
   constructionType?: 'full_modular' | 'semi_modular';
+  description?: string;
 }
 
 /**
@@ -192,12 +193,227 @@ export function normalizeFurnitureCategory(raw: string, itemName: string = ''): 
   if (s.includes('tv') || s.includes('entertainment') || s.includes('media')) return 'tv_unit';
   if (s.includes('bed') || s.includes('headboard') || s.includes('mattress') || s.includes('cot')) return 'bed';
   if (s.includes('sofa') || s.includes('couch') || s.includes('chair') || s.includes('seating') || s.includes('sitting')) return 'sitting';
-  if (s.includes('shelf') || s.includes('bookcase') || s.includes('cabinet') || s.includes('tall')) return 'vertical_box';
+  if (s.includes('shelf') || s.includes('bookcase') || s.includes('cabinet') || s.includes('tall') || s.includes('dressing')) return 'vertical_box';
   if (s.includes('office') || s.includes('desk') || s.includes('study')) return 'office';
   if (s.includes('pooja') || s.includes('mandir')) return 'pooja';
   if (s.includes('utility') || s.includes('shoe')) return 'utility';
   if (s.includes('dining') || s.includes('table')) return 'living';
   return 'other';
+}
+
+/**
+ * Infers which wall a furniture piece sits against from directional
+ * words in its own name (e.g. "Left Expo", "Loft Shutter Right",
+ * "Kitchen Opp Base" -- "Opp" meaning the wall opposite the entry).
+ * This is how per-item price-quotation sheets typically describe
+ * position, since they have no explicit X/Y or Wall Placement column.
+ */
+function inferWallPlacementFromName(name: string): 'back_wall' | 'left_wall' | 'right_wall' | 'front_wall' | 'auto' {
+  const s = name.toLowerCase();
+  if (s.includes('left')) return 'left_wall';
+  if (s.includes('right')) return 'right_wall';
+  if (s.includes('front') || s.includes('bottom')) return 'front_wall';
+  if (s.includes('top') || s.includes('back') || s.includes('opp')) return 'back_wall';
+  return 'auto';
+}
+
+/**
+ * Detects and parses the common Indian modular-interior "Price
+ * Calculator" quotation format: a single sheet with a title/client-info
+ * header block, then a table of S.No / Room / Item / Width(ft) /
+ * Height(ft) / Depth(ft) / Rate / Qty / Amount rows -- one row per
+ * FURNITURE PIECE (not per room), where the Room column is only filled
+ * on the first item of each room and left blank for the rest, and a
+ * blank Depth explicitly means "Frame/Shutter" only (this sheet's own
+ * name for what this app calls a semi-modular item).
+ *
+ * Unlike the structured multi-sheet and flat-room-per-row formats, this
+ * sheet carries no room width/depth at all -- it's a cost quotation, not
+ * a floor plan -- so room sizes are auto-estimated from the furniture
+ * that lands in them. Returns true and populates parsedRooms/
+ * parsedFurniture/warnings if this format was detected, false otherwise
+ * (leaving the workbook for the other parse strategies to try).
+ */
+function tryParsePriceQuotationSheet(
+  workbook: XLSX.WorkBook,
+  parsedRooms: ParsedRoomRow[],
+  parsedFurniture: ParsedFurnitureRow[],
+  warnings: string[]
+): boolean {
+  const firstSheetName = workbook.SheetNames[0];
+  const sheet = workbook.Sheets[firstSheetName];
+  const grid: any[][] = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+
+  const norm = (c: any) => String(c ?? '').toLowerCase().replace(/\s+/g, ' ').trim();
+  const isSNoCell = (c: string) => c === 's.no' || c === 's.no.' || c === 'sno' || c === 's no';
+
+  let headerRowIdx = -1;
+  const col: Record<string, number> = {};
+  for (let r = 0; r < Math.min(grid.length, 20); r++) {
+    const row = (grid[r] || []).map(norm);
+    const sNoIdx = row.findIndex(isSNoCell);
+    const itemIdx = row.findIndex((c) => c.includes('item') && (c.includes('furniture') || c.includes('description')));
+    if (sNoIdx !== -1 && itemIdx !== -1) {
+      headerRowIdx = r;
+      row.forEach((c, i) => {
+        if (isSNoCell(c)) col.sno = i;
+        else if (c.includes('room')) col.room = i;
+        else if (c.includes('item') && (c.includes('furniture') || c.includes('description'))) col.item = i;
+        else if (c.includes('width') && c.includes('ft')) col.widthFt = i;
+        else if (c.includes('height') && c.includes('ft')) col.heightFt = i;
+        else if (c.includes('depth') && c.includes('ft')) col.depthFt = i;
+        else if (c.includes('amount')) col.amount = i;
+      });
+      break;
+    }
+  }
+
+  if (headerRowIdx === -1 || col.item === undefined || col.widthFt === undefined || col.heightFt === undefined) {
+    return false;
+  }
+
+  const num = (v: any): number => {
+    if (v === '' || v === undefined || v === null) return NaN;
+    const n = typeof v === 'number' ? v : parseFloat(String(v).replace(/[^0-9.]/g, ''));
+    return n;
+  };
+  const inr = (n: number) => `₹${Math.round(n).toLocaleString('en-IN')}`;
+
+  const defaultDepthByCategory: Record<string, number> = {
+    wardrobe: 600, kitchen: 600, below_overhead: 350, vertical_box: 400,
+    sitting: 450, tv_unit: 400, bed: 2000, office: 550, pooja: 450,
+    utility: 400, living: 450, other: 25,
+  };
+
+  // Categories an exposed end/finish panel would plausibly be billed
+  // against -- the tall cabinet-like units, not a sitting box or bed
+  // that might get logged in between a wardrobe and its own Expo rows.
+  const cabinetLikeCategories = new Set(['wardrobe', 'kitchen', 'below_overhead', 'vertical_box', 'tv_unit', 'office', 'pooja', 'utility']);
+
+  let currentRoom = '';
+  let pendingWardrobeIdx: number | null = null;
+  let lastCabinetLikeIdx: number | null = null;
+  const roomsSeen: string[] = [];
+  let skippedAmount = 0;
+  const skippedNames: string[] = [];
+
+  for (let r = headerRowIdx + 1; r < grid.length; r++) {
+    const row = grid[r] || [];
+    const roomCell = col.room !== undefined ? String(row[col.room] ?? '').trim() : '';
+    const itemCell = col.item !== undefined ? String(row[col.item] ?? '').trim() : '';
+
+    if (roomCell && roomCell !== currentRoom) {
+      currentRoom = roomCell;
+      if (!roomsSeen.includes(currentRoom)) roomsSeen.push(currentRoom);
+      // A new room resets which item an "Expo"/"Loft" row can attach to
+      // -- they should never reach back into the previous room's units.
+      pendingWardrobeIdx = null;
+      lastCabinetLikeIdx = null;
+    }
+
+    if (!itemCell) continue;
+    if (/^(total|grand total|gst)\b/i.test(itemCell)) break;
+
+    const widthFt = num(row[col.widthFt]);
+    const heightFt = num(row[col.heightFt]);
+    const depthFt = col.depthFt !== undefined ? num(row[col.depthFt]) : NaN;
+    const amount = col.amount !== undefined ? num(row[col.amount]) || 0 : 0;
+
+    if (isNaN(widthFt) || isNaN(heightFt)) {
+      // No dimensions at all -- a hardware/labor lump-sum line (e.g.
+      // "Hinges Hettich", "Transport + Khalasi Worker"), not a physical
+      // module this tool can draw.
+      skippedAmount += amount;
+      skippedNames.push(itemCell);
+      continue;
+    }
+
+    const roomForItem = currentRoom || 'Living Room';
+    if (!roomsSeen.includes(roomForItem)) roomsSeen.push(roomForItem);
+    const hasDepth = !isNaN(depthFt) && depthFt > 0;
+    const widthMm = Math.round(widthFt * 304.8);
+    const heightMm = Math.round(heightFt * 304.8);
+
+    const itemLower = itemCell.toLowerCase().trim();
+
+    // A bare "Loft" row is this sheet's way of adding a loft box on top
+    // of the wardrobe listed just above it, not a separate physical item.
+    if (itemLower === 'loft' && pendingWardrobeIdx !== null) {
+      const parent = parsedFurniture[pendingWardrobeIdx];
+      parent.hasLoft = true;
+      parent.loftHeightMm = heightMm;
+      parent.name = `${parent.name} (+ Loft)`;
+      continue;
+    }
+
+    // "... Expo" rows price an exposed/finished end panel on the most
+    // recent cabinet-like unit in this room -- not necessarily the row
+    // directly above (e.g. a Sitting Box can land in between a wardrobe
+    // and its own Expo rows) -- fold the cost into that unit's
+    // description instead of drawing a second overlapping box.
+    if (itemLower.includes('expo') && lastCabinetLikeIdx !== null) {
+      const parent = parsedFurniture[lastCabinetLikeIdx];
+      const note = `${itemCell}: ${inr(amount)}`;
+      parent.description = parent.description ? `${parent.description}; ${note}` : `Exposed panel: ${note}`;
+      continue;
+    }
+
+    const category = normalizeFurnitureCategory(`${itemCell} ${roomForItem}`, itemCell);
+    const depthMm = hasDepth ? Math.round(depthFt * 304.8) : (defaultDepthByCategory[category] ?? 400);
+
+    parsedFurniture.push({
+      roomName: roomForItem,
+      category,
+      name: itemCell,
+      widthMm,
+      depthMm,
+      heightMm,
+      wallPlacement: inferWallPlacementFromName(itemCell),
+      constructionType: hasDepth ? 'full_modular' : 'semi_modular',
+      description: hasDepth
+        ? `Quotation: ${widthFt}ft × ${heightFt}ft × ${depthFt}ft, Volume basis, ${inr(amount)}`
+        : `Quotation: ${widthFt}ft × ${heightFt}ft, Frame/Shutter (Area basis), ${inr(amount)}`,
+    });
+
+    const newIdx = parsedFurniture.length - 1;
+    if (cabinetLikeCategories.has(category)) lastCabinetLikeIdx = newIdx;
+    pendingWardrobeIdx = category === 'wardrobe' ? newIdx : null;
+  }
+
+  if (parsedFurniture.length === 0) return false;
+
+  // This sheet has no room dimensions at all -- only furniture costs --
+  // so estimate a room size generous enough to hold what landed in it.
+  roomsSeen.forEach((room, idx) => {
+    const itemsInRoom = parsedFurniture.filter((f) => f.roomName === room);
+    if (itemsInRoom.length === 0) return;
+    const maxItemWidth = Math.max(...itemsInRoom.map((f) => f.widthMm));
+    const totalWidth = itemsInRoom.reduce((sum, f) => sum + f.widthMm, 0);
+    const widthMm = Math.max(3000, Math.min(6500, Math.round(totalWidth / 2) + 900, maxItemWidth + 1800));
+    const depthMm = Math.max(2700, Math.round(widthMm * 0.82));
+
+    parsedRooms.push({
+      rowNumber: idx + 1,
+      roomName: room,
+      roomType: normalizeRoomType(room),
+      widthMm,
+      depthMm,
+      heightMm: 2900,
+      wallThicknessMm: 150,
+      notes: 'Room size auto-estimated from furniture footprint -- this quotation sheet has no room dimensions, only item costs.',
+    });
+  });
+
+  warnings.push(
+    'This looks like a per-item price quotation sheet, not a room-dimension sheet -- room sizes below were auto-estimated from the furniture that lands in each room. Adjust them in the 2D view if you know the real sizes.'
+  );
+  if (skippedNames.length > 0) {
+    warnings.push(
+      `Skipped ${skippedNames.length} line item(s) with no width/height (hardware & labor, not physical modules) totaling ${inr(skippedAmount)}: ${skippedNames.filter(Boolean).join(', ')}. Add this to your budget separately.`
+    );
+  }
+
+  return true;
 }
 
 /**
@@ -244,6 +460,13 @@ export function parseExcelWorkbookToProject(data: ArrayBuffer | Uint8Array): Exc
   const parsedRooms: ParsedRoomRow[] = [];
   const parsedFurniture: ParsedFurnitureRow[] = [];
   const parsedOpenings: ParsedOpeningRow[] = [];
+
+  // Check first for the per-item price-quotation format (S.No / Room /
+  // Item / Width(ft) / Height(ft) / Depth(ft) table) before trying the
+  // structured multi-sheet or one-row-per-room formats below -- it needs
+  // very different handling since each row is a furniture piece, not a
+  // room, and there are no room dimensions to read at all.
+  tryParsePriceQuotationSheet(workbook, parsedRooms, parsedFurniture, warnings);
 
   // Helper to find sheet by name substring (case-insensitive)
   const findSheet = (keywords: string[]) => {
@@ -660,6 +883,7 @@ export function parseExcelWorkbookToProject(data: ArrayBuffer | Uint8Array): Exc
           catalogId: `cat_${fItem.category}_${fIdx}`,
           category: fItem.category,
           name: fItem.name,
+          description: fItem.description,
           x,
           y,
           z,

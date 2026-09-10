@@ -1460,6 +1460,14 @@ export const PropertyInspector: React.FC<PropertyInspectorProps> = ({
             {selectedFurniture.category.toUpperCase()} MODULE • {selectedFurniture.width}×{selectedFurniture.height}×
             {selectedFurniture.depth}
           </span>
+          {selectedFurniture.description && (
+            <span
+              className="text-[9.5px] text-slate-400 block truncate"
+              title={selectedFurniture.description}
+            >
+              {selectedFurniture.description}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-1 flex-shrink-0">
           <button
