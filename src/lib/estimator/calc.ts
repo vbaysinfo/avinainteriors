@@ -1,5 +1,5 @@
 import { generateId } from "./id";
-import { getMaterialById } from "./materials";
+import { findMaterial } from "./materials";
 import {
   ComponentKind,
   ComponentRow,
@@ -61,7 +61,7 @@ function round(n: number, decimals = 2): number {
   return Math.round(n * factor) / factor;
 }
 
-export function computeProjectTotals(rooms: Room[], gstPercent: number): ProjectTotals {
+export function computeProjectTotals(rooms: Room[], gstPercent: number, materials: Material[]): ProjectTotals {
   let totalAreaSqft = 0;
   let totalVolumeCuft = 0;
   let subtotal = 0;
@@ -96,13 +96,17 @@ export function computeProjectTotals(rooms: Room[], gstPercent: number): Project
   const gstAmount = round(subtotal * (gstPercent / 100));
   const grandTotal = round(subtotal + gstAmount);
 
-  const materialUsage = Array.from(materialMap.entries()).map(([materialId, v]) => ({
-    materialId,
-    materialName: getMaterialById(materialId).name,
-    areaSqft: round(v.areaSqft),
-    volumeCuft: round(v.volumeCuft),
-    amount: round(v.amount),
-  }));
+  const materialUsage = Array.from(materialMap.entries()).map(([materialId, v]) => {
+    const material = findMaterial(materials, materialId);
+    return {
+      materialId,
+      materialName: material.name,
+      materialSpec: material.spec,
+      areaSqft: round(v.areaSqft),
+      volumeCuft: round(v.volumeCuft),
+      amount: round(v.amount),
+    };
+  });
 
   return {
     totalAreaSqft: round(totalAreaSqft),
@@ -121,13 +125,13 @@ export function computeProjectTotals(rooms: Room[], gstPercent: number): Project
  * two sides, top, bottom, back, and a shutter/door face. Area-basis components (shutters,
  * panels, frames) are a single flat panel at their own width x height.
  */
-export function generateCutPanels(rooms: Room[]): CutPanel[] {
+export function generateCutPanels(rooms: Room[], materials: Material[]): CutPanel[] {
   const panels: CutPanel[] = [];
 
   for (const room of rooms) {
     for (const raw of room.components) {
       const row = computeRow(raw);
-      const material = getMaterialById(row.materialId);
+      const material = findMaterial(materials, row.materialId);
       if (!row.widthMm || !row.heightMm) continue;
 
       if (row.calcBasis === "volume" && row.depthMm) {

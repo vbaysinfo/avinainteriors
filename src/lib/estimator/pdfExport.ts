@@ -9,7 +9,7 @@ function money(n: number): string {
 
 export function generatePdfProposal(project: Project): jsPDF {
   const doc = new jsPDF({ unit: "pt", format: "a4" });
-  const totals = computeProjectTotals(project.rooms, project.gstPercent);
+  const totals = computeProjectTotals(project.rooms, project.gstPercent, project.materials);
   const marginX = 40;
   let y = 40;
 
@@ -109,6 +109,25 @@ export function generatePdfProposal(project: Project): jsPDF {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   y = (doc as any).lastAutoTable.finalY + 20;
 
+  if (y > 620) {
+    doc.addPage();
+    y = 40;
+  }
+  doc.setFont("helvetica", "bold");
+  doc.text("Material Specifications", marginX, y);
+  y += 8;
+  autoTable(doc, {
+    startY: y,
+    margin: { left: marginX, right: marginX },
+    styles: { fontSize: 8, cellPadding: 3, valign: "top" },
+    headStyles: { fillColor: [140, 100, 56] },
+    columnStyles: { 0: { cellWidth: 140 }, 1: { cellWidth: "auto" } },
+    head: [["Material", "Specification"]],
+    body: totals.materialUsage.map((m) => [m.materialName, m.materialSpec || "-"]),
+  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  y = (doc as any).lastAutoTable.finalY + 20;
+
   doc.addPage();
   y = 40;
   doc.setFont("helvetica", "bold");
@@ -116,7 +135,7 @@ export function generatePdfProposal(project: Project): jsPDF {
   doc.text("Bill of Materials — Cutting List", marginX, y);
   y += 14;
 
-  const panels = generateCutPanels(project.rooms);
+  const panels = generateCutPanels(project.rooms, project.materials);
   autoTable(doc, {
     startY: y,
     margin: { left: marginX, right: marginX },

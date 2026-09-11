@@ -17,6 +17,8 @@ export interface Material {
   ratePerCuft: number;
   /** Panel thickness used when breaking a box/drawer into cut panels, in mm. */
   thicknessMm: number;
+  /** Free-text spec shown on the client proposal, e.g. grade, brand, finish, ISI mark. */
+  spec: string;
 }
 
 export interface ComponentRow {
@@ -54,6 +56,7 @@ export interface Project {
   date: string;
   projectType: ProjectType;
   gstPercent: number;
+  materials: Material[];
   rooms: Room[];
   createdAt: string;
   updatedAt: string;
@@ -84,6 +87,7 @@ export interface CutPanel {
 export interface MaterialUsage {
   materialId: string;
   materialName: string;
+  materialSpec: string;
   areaSqft: number;
   volumeCuft: number;
   amount: number;

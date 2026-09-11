@@ -7,7 +7,10 @@ import { Project, Wall, WALL_LABELS } from "@/lib/estimator/types";
 const WALLS: Wall[] = ["front", "left", "right", "back", "unassigned"];
 
 export function CuttingList({ project }: { project: Project }) {
-  const panels = useMemo(() => generateCutPanels(project.rooms), [project.rooms]);
+  const panels = useMemo(
+    () => generateCutPanels(project.rooms, project.materials),
+    [project.rooms, project.materials]
+  );
 
   return (
     <div className="space-y-6">

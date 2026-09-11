@@ -3,11 +3,12 @@
 import { Trash2, Plus, Copy } from "lucide-react";
 import { computeRow } from "@/lib/estimator/calc";
 import { BOX_HEIGHT_PRESETS_FT, BOX_WIDTH_PRESETS_FT } from "@/lib/estimator/boxPresets";
-import { DEFAULT_MATERIALS, getMaterialById } from "@/lib/estimator/materials";
+import { findMaterial } from "@/lib/estimator/materials";
 import {
   ComponentKind,
   ComponentRow,
   COMPONENT_KIND_LABELS,
+  Material,
   ProjectType,
   Room,
   Wall,
@@ -17,6 +18,7 @@ import {
 interface ComponentTableProps {
   room: Room;
   projectType: ProjectType;
+  materials: Material[];
   onUpdateRow: (rowId: string, patch: Partial<ComponentRow>) => void;
   onRemoveRow: (rowId: string) => void;
   onDuplicateRow: (rowId: string) => void;
@@ -37,6 +39,7 @@ function numOrNull(v: string): number | null {
 export function ComponentTable({
   room,
   projectType,
+  materials,
   onUpdateRow,
   onRemoveRow,
   onDuplicateRow,
@@ -178,7 +181,7 @@ export function ComponentTable({
                     <select
                       value={row.materialId}
                       onChange={(e) => {
-                        const m = getMaterialById(e.target.value);
+                        const m = findMaterial(materials, e.target.value);
                         onUpdateRow(row.id, {
                           materialId: m.id,
                           rate: computed.calcBasis === "volume" ? m.ratePerCuft : m.ratePerSqft,
@@ -186,7 +189,7 @@ export function ComponentTable({
                       }}
                       className="w-36 rounded border border-ink/15 bg-white px-2 py-1 focus:border-gold focus:outline-none"
                     >
-                      {DEFAULT_MATERIALS.map((m) => (
+                      {materials.map((m) => (
                         <option key={m.id} value={m.id}>
                           {m.name}
                         </option>

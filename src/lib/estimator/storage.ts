@@ -1,3 +1,4 @@
+import { cloneDefaultMaterials } from "./materials";
 import { Project } from "./types";
 
 const STORAGE_KEY = "avina_estimator_projects_v1";
@@ -9,13 +10,21 @@ function isBrowser(): boolean {
 let cache: Project[] | null = null;
 const listeners = new Set<() => void>();
 
+/** Backfills fields added after a project may have already been saved (e.g. materials). */
+function normalizeProject(project: Project): Project {
+  return {
+    ...project,
+    materials: project.materials?.length ? project.materials : cloneDefaultMaterials(),
+  };
+}
+
 function readFromStorage(): Project[] {
   if (!isBrowser()) return [];
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    return Array.isArray(parsed) ? parsed.map(normalizeProject) : [];
   } catch {
     return [];
   }
@@ -43,7 +52,7 @@ export function subscribeProjects(listener: () => void): () => void {
 export function saveProject(project: Project): void {
   const projects = loadProjects();
   const index = projects.findIndex((p) => p.id === project.id);
-  const updated = { ...project, updatedAt: new Date().toISOString() };
+  const updated = normalizeProject({ ...project, updatedAt: new Date().toISOString() });
   const next = index === -1 ? [...projects, updated] : projects.map((p, i) => (i === index ? updated : p));
   setCache(next);
 }

@@ -14,7 +14,7 @@ export function PricingReport({
   project: Project;
   onGstChange: (gst: number) => void;
 }) {
-  const totals = computeProjectTotals(project.rooms, project.gstPercent);
+  const totals = computeProjectTotals(project.rooms, project.gstPercent, project.materials);
 
   return (
     <div className="space-y-6">
@@ -53,7 +53,10 @@ export function PricingReport({
           <tbody>
             {totals.materialUsage.map((m) => (
               <tr key={m.materialId} className="border-b border-ink/5">
-                <td className="py-1.5 text-ink/70">{m.materialName}</td>
+                <td className="py-1.5 text-ink/70">
+                  {m.materialName}
+                  {m.materialSpec && <div className="text-xs text-ink/40">{m.materialSpec}</div>}
+                </td>
                 <td className="py-1.5 text-right">{m.areaSqft || "-"}</td>
                 <td className="py-1.5 text-right">{m.volumeCuft || "-"}</td>
                 <td className="py-1.5 text-right font-medium text-ink">{inr(m.amount)}</td>

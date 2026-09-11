@@ -1,5 +1,5 @@
 import { generateId } from "./id";
-import { DEFAULT_MATERIALS } from "./materials";
+import { cloneDefaultMaterials, DEFAULT_MATERIALS } from "./materials";
 import { ComponentRow, Project, Room } from "./types";
 
 const ply = DEFAULT_MATERIALS[0];
@@ -66,6 +66,7 @@ export function buildSampleProject(): Project {
     date: now.slice(0, 10),
     projectType: "semi",
     gstPercent: 18,
+    materials: cloneDefaultMaterials(),
     rooms: [mbr, kitchen],
     createdAt: now,
     updatedAt: now,

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Trash2, Upload } from "lucide-react";
 import { FileUploadCard } from "@/components/estimator/FileUploadCard";
 import { generateId } from "@/lib/estimator/id";
-import { DEFAULT_MATERIALS } from "@/lib/estimator/materials";
+import { cloneDefaultMaterials, DEFAULT_MATERIALS } from "@/lib/estimator/materials";
 import { parseProjectJsonFile } from "@/lib/estimator/projectIO";
 import { buildSampleProject } from "@/lib/estimator/sampleData";
 import { deleteProject, loadProjects, saveProject, subscribeProjects } from "@/lib/estimator/storage";
@@ -29,6 +29,7 @@ function blankProject(name: string, clientName: string, projectType: ProjectType
     date: now.slice(0, 10),
     projectType,
     gstPercent: 18,
+    materials: cloneDefaultMaterials(),
     rooms: [room],
     createdAt: now,
     updatedAt: now,
@@ -46,6 +47,7 @@ function projectFromParsedExcel(parsed: ParsedExcel, name: string, projectType: 
     date: parsed.date || now.slice(0, 10),
     projectType,
     gstPercent: 18,
+    materials: cloneDefaultMaterials(),
     rooms: parsed.rooms,
     createdAt: now,
     updatedAt: now,

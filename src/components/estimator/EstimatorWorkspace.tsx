@@ -2,23 +2,25 @@
 
 import { useState } from "react";
 import { generateId } from "@/lib/estimator/id";
-import { DEFAULT_MATERIALS } from "@/lib/estimator/materials";
+import { createBlankMaterial } from "@/lib/estimator/materials";
 import { emptyComponentRow } from "@/lib/estimator/calc";
 import { saveProject } from "@/lib/estimator/storage";
-import { ComponentRow, Project, ProjectType, Room } from "@/lib/estimator/types";
+import { ComponentRow, Material, Project, ProjectType, Room } from "@/lib/estimator/types";
 import { ComponentTable } from "./ComponentTable";
 import { RoomLayoutView } from "./RoomLayoutView";
 import { PricingReport } from "./PricingReport";
 import { CuttingList } from "./CuttingList";
 import { ExportButtons } from "./ExportButtons";
+import { MaterialsPanel } from "./MaterialsPanel";
 
-type Tab = "input" | "layout" | "cutlist" | "pricing";
+type Tab = "input" | "layout" | "cutlist" | "pricing" | "materials";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "input", label: "Input Sheet" },
   { id: "layout", label: "2D Layout" },
   { id: "cutlist", label: "Cutting List" },
   { id: "pricing", label: "Pricing Report" },
+  { id: "materials", label: "Materials" },
 ];
 
 export function EstimatorWorkspace({ initialProject }: { initialProject: Project }) {
@@ -53,7 +55,7 @@ export function EstimatorWorkspace({ initialProject }: { initialProject: Project
           ? r
           : {
               ...r,
-              components: [...r.components, emptyComponentRow(r.components.length + 1, DEFAULT_MATERIALS[0])],
+              components: [...r.components, emptyComponentRow(r.components.length + 1, project.materials[0])],
             }
       ),
     });
@@ -94,6 +96,22 @@ export function EstimatorWorkspace({ initialProject }: { initialProject: Project
 
   function renameRoom(roomId: string, name: string) {
     persist({ ...project, rooms: project.rooms.map((r) => (r.id === roomId ? { ...r, name } : r)) });
+  }
+
+  function addMaterial() {
+    persist({ ...project, materials: [...project.materials, createBlankMaterial()] });
+  }
+
+  function updateMaterial(materialId: string, patch: Partial<Material>) {
+    persist({
+      ...project,
+      materials: project.materials.map((m) => (m.id === materialId ? { ...m, ...patch } : m)),
+    });
+  }
+
+  function removeMaterial(materialId: string) {
+    if (project.materials.length <= 1) return;
+    persist({ ...project, materials: project.materials.filter((m) => m.id !== materialId) });
   }
 
   return (
@@ -150,6 +168,7 @@ export function EstimatorWorkspace({ initialProject }: { initialProject: Project
               key={room.id}
               room={room}
               projectType={project.projectType}
+              materials={project.materials}
               onUpdateRow={(rowId, patch) => updateRow(room.id, rowId, patch)}
               onAddRow={() => addRow(room.id)}
               onRemoveRow={(rowId) => removeRow(room.id, rowId)}
@@ -179,6 +198,15 @@ export function EstimatorWorkspace({ initialProject }: { initialProject: Project
 
       {tab === "pricing" && (
         <PricingReport project={project} onGstChange={(gst) => updateMeta({ gstPercent: gst })} />
+      )}
+
+      {tab === "materials" && (
+        <MaterialsPanel
+          materials={project.materials}
+          onAdd={addMaterial}
+          onUpdate={updateMaterial}
+          onRemove={removeMaterial}
+        />
       )}
     </div>
   );
