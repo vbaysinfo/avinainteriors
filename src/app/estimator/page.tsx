@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
-import { Trash2 } from "lucide-react";
+import { Trash2, Upload } from "lucide-react";
 import { FileUploadCard } from "@/components/estimator/FileUploadCard";
 import { generateId } from "@/lib/estimator/id";
 import { DEFAULT_MATERIALS } from "@/lib/estimator/materials";
+import { parseProjectJsonFile } from "@/lib/estimator/projectIO";
 import { buildSampleProject } from "@/lib/estimator/sampleData";
 import { deleteProject, loadProjects, saveProject, subscribeProjects } from "@/lib/estimator/storage";
 import { ParsedExcel } from "@/lib/estimator/excelParser";
@@ -58,6 +59,8 @@ export default function EstimatorDashboard() {
   const [clientName, setClientName] = useState("");
   const [projectType, setProjectType] = useState<ProjectType>("semi");
   const [importWarnings, setImportWarnings] = useState<string[]>([]);
+  const [restoreError, setRestoreError] = useState<string | null>(null);
+  const restoreInputRef = useRef<HTMLInputElement>(null);
 
   function createAndGo(project: Project) {
     saveProject(project);
@@ -67,6 +70,15 @@ export default function EstimatorDashboard() {
   function handleParsed(parsed: ParsedExcel) {
     setImportWarnings(parsed.warnings);
     createAndGo(projectFromParsedExcel(parsed, name, projectType));
+  }
+
+  async function handleRestoreFile(file: File) {
+    setRestoreError(null);
+    try {
+      createAndGo(await parseProjectJsonFile(file));
+    } catch (e) {
+      setRestoreError(e instanceof Error ? e.message : "Could not restore this backup file.");
+    }
   }
 
   function handleDelete(id: string) {
@@ -155,6 +167,27 @@ export default function EstimatorDashboard() {
         </div>
       </div>
 
+      <div className="mt-6 flex flex-wrap items-center gap-3">
+        <input
+          ref={restoreInputRef}
+          type="file"
+          accept=".json"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) handleRestoreFile(file);
+            e.target.value = "";
+          }}
+        />
+        <button
+          onClick={() => restoreInputRef.current?.click()}
+          className="inline-flex items-center gap-1.5 text-xs text-ink/60 hover:text-gold-deep transition-colors"
+        >
+          <Upload size={14} /> Restore a project from a backup (.json)
+        </button>
+        {restoreError && <span className="text-xs text-red-600">{restoreError}</span>}
+      </div>
+
       {projects.length > 0 && (
         <div className="mt-12">
           <h2 className="mb-4 font-display text-lg text-ink">Your projects</h2>
@@ -195,7 +228,8 @@ export default function EstimatorDashboard() {
 
       <p className="mt-10 max-w-2xl text-[11px] text-ink/40">
         {DEFAULT_MATERIALS.length} default materials preloaded. Projects are saved to this
-        browser only (local storage) — no account or server sync yet.
+        browser only (local storage) — no account or server sync yet. Use &ldquo;Backup Project
+        (.json)&rdquo; inside a project to move it to another browser or device.
       </p>
     </div>
   );

@@ -68,6 +68,21 @@ export function EstimatorWorkspace({ initialProject }: { initialProject: Project
     });
   }
 
+  function duplicateRow(roomId: string, rowId: string) {
+    persist({
+      ...project,
+      rooms: project.rooms.map((r) => {
+        if (r.id !== roomId) return r;
+        const index = r.components.findIndex((c) => c.id === rowId);
+        if (index === -1) return r;
+        const copy = { ...r.components[index], id: generateId("row"), sno: r.components.length + 1 };
+        const components = [...r.components];
+        components.splice(index + 1, 0, copy);
+        return { ...r, components };
+      }),
+    });
+  }
+
   function addRoom() {
     const room: Room = { id: generateId("room"), name: `Room ${project.rooms.length + 1}`, components: [] };
     persist({ ...project, rooms: [...project.rooms, room] });
@@ -138,6 +153,7 @@ export function EstimatorWorkspace({ initialProject }: { initialProject: Project
               onUpdateRow={(rowId, patch) => updateRow(room.id, rowId, patch)}
               onAddRow={() => addRow(room.id)}
               onRemoveRow={(rowId) => removeRow(room.id, rowId)}
+              onDuplicateRow={(rowId) => duplicateRow(room.id, rowId)}
               onRemoveRoom={() => removeRoom(room.id)}
               onRenameRoom={(name) => renameRoom(room.id, name)}
             />

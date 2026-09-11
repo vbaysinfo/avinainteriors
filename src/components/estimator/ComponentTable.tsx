@@ -1,6 +1,6 @@
 "use client";
 
-import { Trash2, Plus } from "lucide-react";
+import { Trash2, Plus, Copy } from "lucide-react";
 import { computeRow } from "@/lib/estimator/calc";
 import { BOX_HEIGHT_PRESETS_FT, BOX_WIDTH_PRESETS_FT } from "@/lib/estimator/boxPresets";
 import { DEFAULT_MATERIALS, getMaterialById } from "@/lib/estimator/materials";
@@ -19,6 +19,7 @@ interface ComponentTableProps {
   projectType: ProjectType;
   onUpdateRow: (rowId: string, patch: Partial<ComponentRow>) => void;
   onRemoveRow: (rowId: string) => void;
+  onDuplicateRow: (rowId: string) => void;
   onAddRow: () => void;
   onRemoveRoom: () => void;
   onRenameRoom: (name: string) => void;
@@ -38,6 +39,7 @@ export function ComponentTable({
   projectType,
   onUpdateRow,
   onRemoveRow,
+  onDuplicateRow,
   onAddRow,
   onRemoveRoom,
   onRenameRoom,
@@ -75,6 +77,7 @@ export function ComponentTable({
               <th className="py-2 pr-2 font-medium">Qty</th>
               <th className="py-2 pr-2 font-medium">Wall</th>
               <th className="py-2 pr-2 font-medium">Amount</th>
+              <th className="py-2 pr-2 font-medium">Remarks</th>
               <th className="py-2 pr-2 font-medium"></th>
             </tr>
           </thead>
@@ -226,13 +229,30 @@ export function ComponentTable({
                     ₹{computed.amount.toLocaleString("en-IN")}
                   </td>
                   <td className="py-1.5 pr-2">
-                    <button
-                      onClick={() => onRemoveRow(row.id)}
-                      className="text-ink/40 hover:text-red-600 transition-colors"
-                      aria-label="Remove row"
-                    >
-                      <Trash2 size={14} />
-                    </button>
+                    <input
+                      value={row.remarks}
+                      onChange={(e) => onUpdateRow(row.id, { remarks: e.target.value })}
+                      placeholder="Optional note"
+                      className="w-32 rounded border border-ink/15 bg-white px-2 py-1 placeholder:text-[10px] focus:border-gold focus:outline-none"
+                    />
+                  </td>
+                  <td className="py-1.5 pr-2">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => onDuplicateRow(row.id)}
+                        className="text-ink/40 hover:text-gold-deep transition-colors"
+                        aria-label="Duplicate row"
+                      >
+                        <Copy size={14} />
+                      </button>
+                      <button
+                        onClick={() => onRemoveRow(row.id)}
+                        className="text-ink/40 hover:text-red-600 transition-colors"
+                        aria-label="Remove row"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               );
