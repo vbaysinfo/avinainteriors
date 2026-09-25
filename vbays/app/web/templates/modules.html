@@ -1,0 +1,16 @@
+{% extends "base.html" %}{% block title %}Modules{% endblock %}
+{% block content %}
+<h1>Modules</h1>
+<p class="muted">Switch each part of Vbays on or off. <b>Test mode</b> for a module means it never contacts real customers or platforms, even when the rest of the system is live.</p>
+<div class="card scroll"><table>
+<tr><th>Code</th><th>Module</th><th>Phase</th><th>Status</th><th>On/Off</th><th>Test mode</th></tr>
+{% for m in modules %}
+<tr><td>{{ m.code }}</td><td>{{ m.name }}</td><td class="num">{{ m.phase }}</td>
+<td>{% if m.built %}<span class="pill ok">built</span>{% else %}<span class="muted">coming in Phase {{ m.phase }}</span>{% endif %}</td>
+<td><form method="post" action="/modules/{{ m.code }}" class="inline">{{ csrf_input }}<input type="hidden" name="field" value="enabled"><button class="small {{ '' if m.enabled else 'secondary' }}" {{ 'disabled' if not m.built and not m.enabled }}>{{ 'ON' if m.enabled else 'OFF' }}</button></form></td>
+<td><form method="post" action="/modules/{{ m.code }}" class="inline">{{ csrf_input }}<input type="hidden" name="field" value="test_mode"><button class="small {{ 'warn' if m.test_mode else 'secondary' }}">{{ 'TEST' if m.test_mode else 'LIVE' }}</button></form></td>
+</tr>
+{% endfor %}
+</table></div>
+<p class="muted">The master switch is <code>TEST_MODE</code> in the <code>.env</code> file. While it is <b>true</b>, every module is in test mode.</p>
+{% endblock %}

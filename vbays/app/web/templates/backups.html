@@ -1,0 +1,14 @@
+{% extends "base.html" %}{% block title %}Backups{% endblock %}
+{% block content %}
+<h1>Backups</h1>
+<p class="muted">The database is backed up automatically every day at {{ settings.backup_hour }}:00. The last {{ settings.backup_keep_days }} days are kept. Copy them to Google Drive or a pen drive once a week.</p>
+<form method="post" action="/backups/run">{{ csrf_input }}<button>Back up now</button></form>
+<div class="grid2">
+<div class="card"><h2>Backup files</h2><ul>
+{% for f in files %}<li><a href="/backups/{{ f.name }}">{{ f.name }}</a> <span class="muted">{{ (f.stat().st_size/1024)|round(1) }} KB</span></li>{% else %}<li class="muted">None yet.</li>{% endfor %}
+</ul></div>
+<div class="card"><h2>Recent job runs</h2><table>
+{% for r in runs %}<tr><td>{{ r.started_at.strftime('%d %b %H:%M') }}</td><td>{{ r.job_name }}</td><td>{% if r.ok %}<span class="pill ok">OK</span>{% else %}<span class="pill bad">FAILED</span>{% endif %}</td><td><small>{{ r.result }}</small></td></tr>{% endfor %}
+</table></div>
+</div>
+{% endblock %}

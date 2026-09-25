@@ -1,0 +1,23 @@
+{% extends "base.html" %}{% block title %}Approvals{% endblock %}
+{% block content %}
+<h1>Approvals</h1>
+<p class="muted">Nothing is posted, sent, discounted or ordered until the right person approves it here or on Telegram.</p>
+<p class="tabs">{% for s in ['pending','approved','rejected','changes_requested','all'] %}<a href="/approvals?status={{ s }}" class="{{ 'active' if s == status }}">{{ s.replace('_',' ') }}</a>{% endfor %}</p>
+<form method="post" action="/approvals/test" class="inline">{{ csrf_input }}<button class="small secondary">+ Create a test approval</button></form>
+{% for a in items %}
+<div class="card">
+  <h3>#{{ a.id }} {{ a.title }} <span class="pill">{{ a.kind }}</span> <span class="pill {{ {'pending':'warn','approved':'ok','rejected':'bad'}.get(a.status,'') }}">{{ a.status.replace('_',' ') }}</span></h3>
+  <p style="white-space:pre-wrap">{{ a.summary }}</p>
+  <p class="muted">Needs: {{ roles.get(a.approver_role, a.approver_role) }} · asked {{ a.created_at.strftime('%d %b %H:%M') }}{% if a.requested_by %} by {{ a.requested_by.name }}{% endif %}
+  {% if a.decided_by %} · decided by {{ a.decided_by.name }} {{ a.decided_at.strftime('%d %b %H:%M') }}{% endif %}{% if a.decision_note %} · “{{ a.decision_note }}”{% endif %}</p>
+  {% if a.status == 'pending' and (user.role == 'owner' or (user.role == a.approver_role and can('approvals.decide'))) %}
+  <form method="post" action="/approvals/{{ a.id }}" class="row">{{ csrf_input }}
+    <input name="note" placeholder="Note (optional)">
+    <button name="decision" value="approve">✅ Approve</button>
+    <button name="decision" value="changes" class="secondary">✏️ Needs changes</button>
+    <button name="decision" value="reject" class="danger">❌ Reject</button>
+  </form>
+  {% endif %}
+</div>
+{% else %}<p class="muted">Nothing here.</p>{% endfor %}
+{% endblock %}

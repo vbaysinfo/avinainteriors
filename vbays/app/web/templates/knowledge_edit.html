@@ -1,0 +1,16 @@
+{% extends "base.html" %}{% block title %}{{ name }}{% endblock %}
+{% block content %}
+<p><a href="/knowledge">← Knowledge files</a></p>
+<h1>{{ name }} {% if doc %}<small class="muted">version {{ doc.version }}</small>{% endif %}</h1>
+{% if can('knowledge.edit') %}
+<form method="post" action="/knowledge/{{ name }}" class="card">{{ csrf_input }}
+<textarea name="content" rows="28" class="mono">{{ doc.content if doc else '' }}</textarea>
+<button>Save as new version</button>
+</form>
+{% else %}
+<pre class="card mono">{{ doc.content if doc else '' }}</pre>
+{% endif %}
+<div class="card"><h2>History</h2><ul>
+{% for h in history %}<li><a href="/knowledge/{{ name }}?version={{ h.version }}">v{{ h.version }}</a> · {{ h.created_at.strftime('%d %b %Y %H:%M') }} · {{ users.get(h.updated_by_id, 'initial file') }}</li>{% endfor %}
+</ul><p class="muted">To restore an old version: open it, then press Save.</p></div>
+{% endblock %}

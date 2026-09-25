@@ -1,0 +1,5 @@
+template_name,sequence,milestone_name,percent,trigger
+standard,1,Booking,10,booking
+standard,2,Before production,50,before_production
+standard,3,Before installation,35,before_installation
+standard,4,Handover,5,handover

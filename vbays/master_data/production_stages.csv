@@ -1,0 +1,8 @@
+sequence,name,planned_hours,needs_photo,needs_qc
+1,Cutting,8,Y,N
+2,Edge banding,6,Y,N
+3,Drilling,4,N,N
+4,Assembly,8,Y,N
+5,QC,2,Y,Y
+6,Packing,3,Y,N
+7,Dispatch,2,Y,N

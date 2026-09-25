@@ -1,0 +1,12 @@
+item_code,item_name,category,unit,basic_rate,premium_rate,luxury_rate,gst_percent,notes
+KIT-BASE,Kitchen base unit (carcass + shutter),Modular Kitchen,rft,4200,5800,8500,18,SAMPLE RATE - replace with yours
+KIT-WALL,Kitchen wall unit,Modular Kitchen,rft,3200,4500,6800,18,SAMPLE RATE
+KIT-TALL,Kitchen tall unit,Modular Kitchen,rft,6500,8800,12500,18,SAMPLE RATE
+WRD-HNG,Hinged wardrobe (up to 7 ft),Wardrobe,sqft,1350,1850,2750,18,SAMPLE RATE
+WRD-SLD,Sliding wardrobe (up to 7 ft),Wardrobe,sqft,1650,2250,3300,18,SAMPLE RATE
+WRD-LOFT,Wardrobe loft,Wardrobe,sqft,950,1250,1850,18,SAMPLE RATE
+TV-UNIT,TV unit with back panel,Living,sqft,1250,1750,2600,18,SAMPLE RATE
+BED-QS,Queen bed with storage,Bedroom,nos,32000,45000,68000,18,SAMPLE RATE
+CRK-UNIT,Crockery unit,Dining,sqft,1400,1900,2800,18,SAMPLE RATE
+FC-GYP,Gypsum false ceiling (plain),False Ceiling,sqft,85,110,160,18,SAMPLE RATE
+OFF-WS,Office workstation (per seat),Office,nos,14500,19500,28000,18,SAMPLE RATE

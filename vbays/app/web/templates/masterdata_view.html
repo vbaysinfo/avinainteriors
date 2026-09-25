@@ -1,0 +1,22 @@
+{% extends "base.html" %}{% block title %}{{ ds.title }}{% endblock %}
+{% block content %}
+<p><a href="/masterdata">← Master data</a></p>
+<h1>{{ ds.title }}</h1>
+<p class="muted">{{ ds.description }}</p>
+{% if can('masterdata.import') %}
+<form method="post" action="/masterdata/{{ ds.key }}/upload" enctype="multipart/form-data" class="card row">{{ csrf_input }}
+<label>Upload .xlsx or .csv <input type="file" name="file" accept=".csv,.xlsx" required></label>
+<button>Check file</button>
+<a href="/masterdata/{{ ds.key }}/template">Download empty template</a>
+</form>
+{% endif %}
+<details class="card"><summary>Columns</summary><table>
+<tr><th>Column</th><th>Type</th><th>Required</th><th>Help</th></tr>
+{% for c in ds.cols %}<tr><td><code>{{ c.name }}</code></td><td>{{ {'money':'₹ amount','decimal':'number','int':'whole number','bool':'Y / N','role':'role','str':'text'}[c.kind] }}</td><td>{{ 'yes' if c.required else '' }}</td><td>{{ c.help }}</td></tr>{% endfor %}
+</table></details>
+<div class="card scroll"><table>
+<tr>{% for c in ds.cols %}<th>{{ c.name }}</th>{% endfor %}</tr>
+{% for r in rows %}<tr>{% for c in ds.cols %}{% set v = r[c.attr or c.name] %}<td>{% if c.kind == 'money' %}{{ v|rupees }}{% elif c.kind == 'bool' %}{{ 'Y' if v else 'N' }}{% else %}{{ v if v is not none else '' }}{% endif %}</td>{% endfor %}</tr>{% endfor %}
+{% if not rows %}<tr><td colspan="{{ ds.cols|length }}" class="muted">No data yet.</td></tr>{% endif %}
+</table></div>
+{% endblock %}

@@ -12,9 +12,9 @@ in each other's way.
 
 | Phase | What | Status |
 |---|---|---|
-| 0 | Quick start: Claude Desktop Project + free posting tool | ✅ Ready — see `phase0/` |
-| 1 | Architecture, database, logins/roles, data import, Telegram bot, admin panel | 📐 Design ready for approval — see `docs/PHASE1_ARCHITECTURE.md` |
-| 2 | M1 Marketing | ⏳ |
+| 0 | Quick start: Claude Desktop Project (drafting); no third-party posting tools | ✅ Ready — see `phase0/QUICKSTART.md` |
+| 1 | Architecture, database, logins/roles, data import, Telegram bot, admin panel | ✅ Built & tested — see `docs/SETUP_GUIDE.md` |
+| 2 | M1 Marketing: direct Instagram + YouTube posting (official APIs) | ⏳ Next |
 | 3 | M2 WhatsApp Sales Agent + M3 CRM | ⏳ |
 | 4 | M4 Site visit & measurement + M5 Quotation | ⏳ |
 | 5 | M6 Orders & payments | ⏳ |
@@ -24,22 +24,30 @@ in each other's way.
 | 9 | M13 Your own MCP server for Claude Desktop | ⏳ |
 | 10 | Hosting, security review, backups, final testing | ⏳ |
 
-## What's in this folder right now
+## What's in this folder
 
 ```
 vbays/
-├── README.md                          ← you are here
-├── phase0/
-│   ├── CLAUDE_PROJECT_INSTRUCTIONS.md ← paste into a Claude Desktop Project
-│   └── QUICKSTART.md                  ← start posting today (step by step)
-├── knowledge/                         ← the ONLY facts the AI may tell customers
-│   ├── services.md
-│   ├── faq.md
-│   ├── process.md
-│   ├── policies.md
-│   └── brand_guide.md
-└── docs/
-    └── PHASE1_ARCHITECTURE.md         ← the plan for Phase 1 (needs your OK)
+├── app/                 the Vbays program (Python)
+│   ├── core/            logins, roles, approvals, outbox, audit, AI, backups
+│   ├── integrations/    Telegram (Instagram, YouTube, WhatsApp come later)
+│   ├── modules/         the 13 business modules (switch on/off)
+│   └── web/             admin website pages
+├── knowledge/           the ONLY facts the AI may tell customers
+├── master_data/         Excel/CSV templates (with SAMPLE rows)
+├── phase0/              Claude Desktop Project instructions + quick start
+├── docs/                architecture, setup guide
+├── tests/               automatic tests
+├── .env.example         settings template (copy to .env)
+└── docker-compose.yml   one-command start
 ```
 
-Start with `phase0/QUICKSTART.md`.
+**Start here:** `docs/SETUP_GUIDE.md`.
+
+## Safety built in
+- **TEST MODE** is on by default: nothing reaches customers or social media.
+- **Approvals:** nothing goes to a customer or the public without a human "yes".
+- **Audit log:** every important action is recorded and can't be edited.
+- **Roles:** each person sees only what their job needs.
+- **Daily backups** at 2 AM, last 14 days kept.
+- All keys live in `.env`, never in the code.

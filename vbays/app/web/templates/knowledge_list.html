@@ -1,0 +1,14 @@
+{% extends "base.html" %}{% block title %}Knowledge{% endblock %}
+{% block content %}
+<h1>Knowledge files</h1>
+<p class="muted">The AI tells customers <b>only</b> what is written here. Keep these accurate. Every save keeps the old version.</p>
+<div class="card"><table>
+<tr><th>File</th><th>Version</th><th>Last change</th><th>Still to fill</th></tr>
+{% for name, doc in docs %}
+<tr><td><a href="/knowledge/{{ name }}">{{ name }}</a></td>
+<td class="num">{{ doc.version if doc else '-' }}</td>
+<td>{{ doc.created_at.strftime('%d %b %Y %H:%M') if doc else 'missing' }}</td>
+<td>{% if doc %}{% set n = doc.content.count('[') %}{% if n %}<span class="pill warn">{{ n }} blanks / (confirm)</span>{% else %}<span class="pill ok">complete</span>{% endif %}{% endif %}</td></tr>
+{% endfor %}
+</table></div>
+{% endblock %}

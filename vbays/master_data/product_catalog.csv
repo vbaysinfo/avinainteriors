@@ -1,0 +1,6 @@
+code,name,category,std_width_mm,std_height_mm,std_depth_mm,default_board_code,default_finish_code,default_hardware
+BU-600,Base unit 600 (2 shutters),Modular Kitchen,600,720,560,BWP-18,LAM-1MM-M,HNG-SC:4;LEG-100:4
+BU-600-D,Base unit 600 (3 drawers),Modular Kitchen,600,720,560,BWP-18,LAM-1MM-M,CHN-450:3;LEG-100:4
+WU-600,Wall unit 600,Modular Kitchen,600,720,320,BWP-18,LAM-1MM-M,HNG-SC:4
+WR-2D,Wardrobe 2-door hinged,Wardrobe,900,2100,600,HDHMR-18,LAM-1MM-M,HNG-SC:8;CHN-450:2
+TV-1800,TV unit 1800,Living,1800,450,400,HDHMR-18,LAM-1MM-M,CHN-450:2

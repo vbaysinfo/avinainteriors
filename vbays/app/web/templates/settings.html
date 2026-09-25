@@ -1,0 +1,12 @@
+{% extends "base.html" %}{% block title %}Settings{% endblock %}
+{% block content %}
+<h1>Business settings</h1>
+<form method="post" action="/settings" class="card">{{ csrf_input }}
+{% for s in items %}
+<label>{{ s.description or s.key }} <small class="muted">({{ s.key }})</small>
+<input name="s_{{ s.key }}" value="{{ s.value }}"></label>
+{% endfor %}
+<button>Save</button>
+</form>
+<p class="muted">Secrets (API keys, tokens, passwords) are never shown here. They live only in the <code>.env</code> file.</p>
+{% endblock %}

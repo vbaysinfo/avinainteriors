@@ -1,8 +1,12 @@
 # Vbays Phase 1: Architecture, Folder Structure and Database Design
 
-> **Status: waiting for your approval.** No Phase 1 code has been written
-> yet. Please read the "Questions for you" section at the end. Your answers
-> change what gets built.
+> **Status: Phase 1 is built and tested** (see `SETUP_GUIDE.md`). It uses
+> the defaults below wherever you haven't answered a question yet. Your
+> answers to §10 can still change things before Phase 2.
+>
+> **Your decision (25 Sep 2026): no third-party tools.** Vbays posts to
+> Instagram and YouTube itself through the official Meta and Google APIs.
+> Buffer and Upload-Post are removed. See §9.
 
 ---
 
@@ -68,25 +72,29 @@ CRM, factory…) is a separate **module** that can be switched on or off.
 | Web server / API | FastAPI | Fast, modern, easy to add modules |
 | Database | PostgreSQL 16 | Free, reliable. Local via Docker, or Supabase free tier. |
 | Database code | SQLAlchemy 2 + Alembic | Safe database upgrades when we add modules later |
-| Scheduled jobs | APScheduler (jobs stored in the DB) | Backups, reminders, 8 AM summaries |
-| Admin website | **FastAPI + Jinja2 templates + HTMX** (recommended) | See below |
+| Scheduled jobs | APScheduler (jobs defined in code, every run recorded in `job_runs`) | Backups, reminders, 8 AM summaries |
+| Admin website | **FastAPI + simple server pages (Jinja2)** | See below |
 | Telegram bot | python-telegram-bot v21 | Official API, free, buttons + photos |
 | AI | Anthropic Claude API, model set in `.env` | Text + vision (photos, handwritten sheets) |
 | PDFs | WeasyPrint (HTML → PDF) | Branded quotations/invoices look like a web page |
 | Passwords | Argon2 hashing, login sessions via secure cookies | Industry standard |
 | Settings/secrets | `.env` file (never committed) | No secrets in code |
 | Packaging | Docker Compose (app + database) | One command to start everything |
+| Database upgrades | Tables are created automatically on start. Alembic migrations are added in Phase 2, when the first existing table has to change. | |
 
 **Admin panel: why not Streamlit?** Streamlit is quick for charts, but it's
 weak at multiple staff logins with different roles, mobile-friendly forms and
-page-by-page permissions. FastAPI + HTMX gives us proper role-based screens
-that work on a phone, in the **same app** as everything else, with no
-separate JavaScript project. We can still add a Streamlit analytics page
+page-by-page permissions. Plain server pages in FastAPI give us proper
+role-based screens that work on a phone, in the **same app** as everything
+else, with no separate JavaScript project. We can still add a Streamlit analytics page
 later if you like it.
 
 ---
 
 ## 3. Folder structure
+
+Files for later phases (e.g. `pdf.py`, `whatsapp.py`, module folders) are
+added when their phase is built.
 
 ```
 vbays/
@@ -195,7 +203,7 @@ and (where it makes sense) `created_by`. Money is stored in **paise**
 | Table | Holds | Key fields |
 |---|---|---|
 | `users` | Staff logins | name, phone, email, password_hash, role, telegram_chat_id, is_active |
-| `roles_permissions` | What each role can do | role, permission (e.g. `crm.view_phone`) |
+| *(roles & permissions)* | What each role can do: kept in code (`app/core/permissions.py`) so it can't be changed by accident; shown on the Staff page | |
 | `audit_log` | Every important action | user_id, action, entity_type, entity_id, before/after (JSON), ip, time. **Insert-only.** |
 | `approvals` | The approval queue | type (post/quotation/discount/PO/template/payment_request), entity_id, requested_by, approver_role, status (pending/approved/rejected/edited), decided_by, decided_at, note |
 | `settings` | Business settings editable from admin | key, value (e.g. `discount_owner_approval_percent = 5`) |
@@ -251,7 +259,7 @@ Every step ─▶ tasks (M11) + audit_log + dashboard (M12)
 
 ---
 
-## 7. What Phase 1 will deliver (and how you'll test it)
+## 7. What Phase 1 delivers (and how you test it)
 
 1. **One-command start** (`docker compose up`) with database + app.
 2. **Admin website** with login, role-based menu, and these pages:
@@ -260,13 +268,13 @@ Every step ─▶ tasks (M11) + audit_log + dashboard (M12)
    errors, confirm) · Approvals queue · Outbox (what *would* be sent in test
    mode) · Audit log.
 3. **Telegram bot base:** staff link their account with a one-time code;
-   `/start`, `/me`, `/help`; approval buttons (Approve / Reject / Edit)
+   `/start`, `/link`, `/me`, `/pending`, `/help`; approval buttons (Approve / Reject / Needs changes)
    working end to end with a test approval.
 4. **Daily database backup** at 2 AM, keeping the last 14 days (plus
    instructions to copy backups to Google Drive).
 5. **Master data templates** + sample data filled in for a demo.
 6. **Automated tests** for login, roles, approvals, audit, import, test mode.
-7. **Simple guide:** "How to start Vbays on your computer, step by step".
+7. **Simple guide:** `docs/SETUP_GUIDE.md`, "How to start Vbays on your computer, step by step".
 
 **Your acceptance test for Phase 1:** log in as Owner → create a Sales user →
 import the sample rate card → create a test approval → approve it from
@@ -275,7 +283,45 @@ outside (outbox shows "TEST").
 
 ---
 
-## 8. Running cost (Phase 1 only)
+## 8. Fully automatic posting, no third parties (Phase 2 design)
+
+Vbays talks **directly** to the official APIs. No Buffer, Upload-Post,
+Zapier or similar.
+
+```
+Google Drive folder ──▶ Vbays media inbox (Claude checks quality, tags room/style)
+                              │
+Weekly plan (Claude) ──▶ Vbays video maker (FFmpeg: 9:16 Reels, 16:9 YouTube)
+                              │
+                     Telegram to owner: [✅ Approve] [✏️ Edit] [🔄 Redo] [❌ Reject] [🕒 Reschedule]
+                              │ approved
+                              ▼
+            Vbays scheduler posts at the chosen time
+            ├── Instagram Graph API (official, Meta): Reels, carousels, posts
+            └── YouTube Data API v3 (official, Google): Shorts + long videos
+                              │
+            Comments/DMs read back ▶ replies from knowledge files ▶ leads into CRM
+```
+
+**"Automatic" and your approval rule.** Your Part 2 rule says nothing is
+posted without approval. So Vbays does everything automatically **up to**
+one Telegram tap from you, and **everything after** the tap. If you want,
+we can later allow some content (e.g. "Tip of the Day") to publish with no
+tap, using the `auto_publish_marketing` setting, but only if you choose to.
+
+**What the platforms require (free, but takes time):**
+
+| Platform | Requirement | Notes |
+|---|---|---|
+| Instagram | Business account + a Meta developer app | Posting to **your own** account works while the app is in development mode. No Meta app review is needed just for you. |
+| Instagram | Photos/videos must be at a **public web address** when posting | Instagram downloads the file from our server. So auto-posting needs Vbays online (a small cloud server, ~₹500–1,000/month), or at least a temporary public link. |
+| YouTube | Google Cloud project with YouTube Data API v3 | Free quota is about 6 uploads per day, more than we need. |
+| YouTube | **API audit by Google** | Until Google approves our project (free form, usually 1–4 weeks), videos uploaded through the API stay **private**. We apply at the start of Phase 2. |
+
+Because of the public-address requirement, I suggest we **move Phase 10's
+hosting earlier**: set up the small cloud server during Phase 2.
+
+## 9. Running cost (Phase 1 only)
 
 | Item | Cost |
 |---|---|
@@ -286,7 +332,7 @@ outside (outbox shows "TEST").
 
 ---
 
-## 9. Questions for you (please answer before Phase 1 starts)
+## 10. Questions for you (answer when you can)
 
 **Naming**
 1. Is the app name **"Vbays"** and the company **"Avina Interiors"**? Or is
@@ -314,16 +360,20 @@ outside (outbox shows "TEST").
     warranty, starting prices)? Some look like placeholders.
 
 **Technical**
-12. Where should Phase 1 run while we build: **your own computer** (Windows
-    or Mac?) or a small **cloud server** (~₹500–1,000/month)?
+12. Instagram needs a public web address to post from (see §8). Shall we set
+    up a small **cloud server** (~₹500–1,000/month) during Phase 2? If so,
+    do you prefer a provider (e.g. DigitalOcean, Hetzner, AWS Lightsail,
+    Hostinger VPS)?
 13. Database: local PostgreSQL (Docker) or **Supabase free tier**? (Free
     Supabase pauses after a week of no use, fine for testing.)
-14. Admin panel: OK with my recommendation (**FastAPI + HTMX**, mobile
-    friendly), or do you prefer Streamlit?
+14. Admin panel: I built simple mobile-friendly pages (see screenshots).
+    Happy with them, or do you prefer Streamlit?
 15. Do you already have a Telegram bot token (from @BotFather) and a Claude
     API key? (If not, the setup guide will walk you through it.)
 16. Do you want the optional **Marketing** role (for a freelancer/agency who
     must not see customer data)?
+17. Posting: keep **one Telegram tap per post** (default), or allow some
+    content types (e.g. Tip of the Day) to post with no tap?
 
 Reply with your answers (short answers are fine, e.g. "2: Telugu-English
 mix"). Anything you skip, I'll use the default shown here and list it

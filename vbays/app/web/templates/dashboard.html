@@ -1,0 +1,30 @@
+{% extends "base.html" %}{% block title %}Home{% endblock %}
+{% block content %}
+<h1>Good day, {{ user.name }}</h1>
+<div class="tiles">
+  <a class="tile" href="/approvals"><b>{{ stats.pending_approvals }}</b><span>Approvals waiting</span></a>
+  <a class="tile" href="/outbox"><b>{{ stats.outbox_test }}</b><span>Test-mode messages</span></a>
+  <a class="tile" href="/users"><b>{{ stats.staff }}</b><span>Active staff</span></a>
+  <a class="tile" href="/modules"><b>{{ stats.modules_on }} / 13</b><span>Modules on</span></a>
+</div>
+
+{% if notes %}
+<div class="card"><h2>Your notifications</h2>
+<ul>{% for n in notes %}<li>{{ n.text }} <span class="muted">{{ n.created_at.strftime('%d %b %H:%M') }}</span></li>{% endfor %}</ul>
+<form method="post" action="/notifications/read">{{ csrf_input }}<button class="small secondary">Mark all read</button></form>
+</div>
+{% endif %}
+
+<div class="grid2">
+<div class="card"><h2>Master data loaded</h2>
+<table>{% for ds, n in datasets %}<tr><td><a href="/masterdata/{{ ds.key }}">{{ ds.title }}</a></td><td class="num">{{ n }}</td></tr>{% endfor %}</table>
+</div>
+<div class="card"><h2>System</h2>
+<p>Last backup:
+{% if last_backup %}{{ last_backup.started_at.strftime('%d %b %Y %H:%M') }} {% if last_backup.ok %}<span class="pill ok">OK</span>{% else %}<span class="pill bad">FAILED</span> {{ last_backup.result }}{% endif %}
+{% else %}<span class="muted">none yet (runs daily at {{ settings.backup_hour }}:00)</span>{% endif %}</p>
+<p>AI model: <code>{{ settings.claude_model }}</code> {% if not settings.anthropic_api_key %}<span class="pill warn">no API key</span>{% endif %}</p>
+<p>Telegram bot: {% if settings.telegram_enabled and settings.telegram_bot_token %}<span class="pill ok">on</span>{% else %}<span class="pill warn">off</span>{% endif %}</p>
+</div>
+</div>
+{% endblock %}

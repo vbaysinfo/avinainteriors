@@ -1,0 +1,16 @@
+{% extends "base.html" %}{% block title %}Check import{% endblock %}
+{% block content %}
+<p><a href="/masterdata/{{ ds.key }}">← {{ ds.title }}</a></p>
+<h1>Check before import: {{ ds.title }}</h1>
+{% if res.errors %}
+<div class="card"><h2 class="bad">{{ res.errors|length }} problem(s). Nothing was saved.</h2>
+<ul>{% for e in res.errors[:200] %}<li>{{ e }}</li>{% endfor %}</ul>
+<p>Fix these in your file and upload again.</p></div>
+{% else %}
+<div class="card"><p><b>{{ res.rows|length }}</b> rows look good: <b>{{ res.to_add }}</b> new, <b>{{ res.to_update }}</b> will be updated.</p>
+<form method="post" action="/masterdata/{{ ds.key }}/confirm">{{ csrf_input }}<input type="hidden" name="token" value="{{ token }}"><button>Import now</button></form></div>
+<div class="card scroll"><table><tr>{% for c in ds.cols %}<th>{{ c.name }}</th>{% endfor %}</tr>
+{% for r in res.rows[:50] %}<tr>{% for c in ds.cols %}{% set v = r[c.attr or c.name] %}<td>{% if c.kind == 'money' %}{{ v|rupees }}{% else %}{{ v if v is not none else '' }}{% endif %}</td>{% endfor %}</tr>{% endfor %}
+</table>{% if res.rows|length > 50 %}<p class="muted">Showing first 50 rows.</p>{% endif %}</div>
+{% endif %}
+{% endblock %}

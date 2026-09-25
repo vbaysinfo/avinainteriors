@@ -1,0 +1,37 @@
+# Start everything:   docker compose up -d
+# First owner login:  docker compose exec app python -m app.cli create-owner
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: vbays
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vbays-change-me}
+      POSTGRES_DB: vbays
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vbays"]
+      interval: 5s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://vbays:${POSTGRES_PASSWORD:-vbays-change-me}@db:5432/vbays
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./knowledge:/app/knowledge
+      - ./master_data:/app/master_data
+      - ./storage:/app/storage
+      - ./backups:/app/backups
+      - ./logs:/app/logs
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  dbdata:

@@ -1,0 +1,12 @@
+{% extends "base.html" %}{% block title %}Master data{% endblock %}
+{% block content %}
+<h1>Master data</h1>
+<p class="muted">Download a template, fill it in Excel, save as .xlsx or .csv, and upload. You'll see every mistake before anything is saved.</p>
+<div class="card"><table>
+<tr><th>Data</th><th>Rows</th><th>Template</th></tr>
+{% for ds, n in datasets %}{% if ds.key != 'staff_roles' or user.role == 'owner' %}
+<tr><td><a href="/masterdata/{{ ds.key }}">{{ ds.title }}</a><br><small class="muted">{{ ds.description }}</small></td>
+<td class="num">{{ n }}</td><td><a href="/masterdata/{{ ds.key }}/template">{{ ds.filename }}</a></td></tr>
+{% endif %}{% endfor %}
+</table></div>
+{% endblock %}

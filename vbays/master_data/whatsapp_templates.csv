@@ -1,0 +1,6 @@
+name,language,category,body,meta_approved
+welcome,en,utility,"Hi {{1}}, thank you for contacting Avina Interiors! Our team will help you with your interior needs. Reply with your area and what you need (kitchen, wardrobe, full home…).",N
+welcome,te-en,utility,"Namaskaram {{1}} garu! Avina Interiors ki contact chesinanduku thanks. Mee area mariyu requirement (kitchen, wardrobe, full home…) cheppandi.",N
+site_visit_reminder,en,utility,"Hi {{1}}, reminder: our supervisor {{2}} will visit your site on {{3}} at {{4}}. Reply YES to confirm.",N
+followup_day2,en,marketing,"Hi {{1}}, just checking in on your interior plans. Would you like a free site visit this week?",N
+payment_reminder,en,utility,"Hi {{1}}, the {{2}} payment of {{3}} for project {{4}} is due on {{5}}. Thank you!",N

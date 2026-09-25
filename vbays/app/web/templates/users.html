@@ -1,0 +1,42 @@
+{% extends "base.html" %}{% block title %}Staff{% endblock %}
+{% block content %}
+<h1>Staff &amp; roles</h1>
+<div class="card">
+<h2>Add a staff member</h2>
+<form method="post" action="/users" class="row">{{ csrf_input }}
+  <label>Name <input name="name" required></label>
+  <label>Role <select name="role">{% for k, v in roles.items() %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></label>
+  <label>Email <input name="email" type="email"></label>
+  <label>Phone <input name="phone"></label>
+  <label>Password (optional) <input name="password" type="password" minlength="8"></label>
+  <button>Add</button>
+</form>
+<p class="muted">Factory staff usually need only Telegram, no password.</p>
+</div>
+
+<div class="card scroll">
+<table>
+<tr><th>Name</th><th>Role</th><th>Login</th><th>Telegram</th><th>Actions</th></tr>
+{% for u in users %}
+<tr class="{{ '' if u.is_active else 'inactive' }}">
+  <td>{{ u.name }}{% if not u.is_active %} <span class="pill bad">inactive</span>{% endif %}</td>
+  <td><form method="post" action="/users/{{ u.id }}" class="inline">{{ csrf_input }}<input type="hidden" name="action" value="role">
+    <select name="role" onchange="this.form.submit()">{% for k, v in roles.items() %}<option value="{{ k }}" {{ 'selected' if k == u.role }}>{{ v }}</option>{% endfor %}</select></form></td>
+  <td>{{ u.email or '' }}<br>{{ u.phone or '' }}{% if u.failed_logins >= 5 %} <span class="pill bad">locked</span>{% endif %}</td>
+  <td>{% if u.telegram_chat_id %}<span class="pill ok">linked</span> {{ u.telegram_username or '' }}{% else %}<span class="muted">not linked</span>{% endif %}</td>
+  <td class="actions">
+    <form method="post" action="/users/{{ u.id }}" class="inline">{{ csrf_input }}<input type="hidden" name="action" value="telegram_code"><button class="small">Telegram code</button></form>
+    {% if u.telegram_chat_id %}<form method="post" action="/users/{{ u.id }}" class="inline">{{ csrf_input }}<input type="hidden" name="action" value="telegram_unlink"><button class="small secondary">Unlink</button></form>{% endif %}
+    <form method="post" action="/users/{{ u.id }}" class="inline">{{ csrf_input }}<input type="hidden" name="action" value="password"><input name="password" type="password" placeholder="new password" minlength="8" class="short"><button class="small secondary">Set</button></form>
+    <form method="post" action="/users/{{ u.id }}" class="inline">{{ csrf_input }}<input type="hidden" name="action" value="toggle"><button class="small secondary">{{ 'Deactivate' if u.is_active else 'Activate' }}</button></form>
+  </td>
+</tr>
+{% endfor %}
+</table>
+</div>
+
+<details class="card"><summary><b>What can each role do?</b></summary>
+<div class="scroll"><table><tr><th>Permission</th>{% for k, v in roles.items() %}<th>{{ v }}</th>{% endfor %}</tr>
+{% for p, desc in permissions.items() %}<tr><td>{{ desc }}</td>{% for k in roles %}<td class="num">{{ '✔' if ('*' in role_permissions[k] or p in role_permissions[k]) else '' }}</td>{% endfor %}</tr>{% endfor %}
+</table></div></details>
+{% endblock %}

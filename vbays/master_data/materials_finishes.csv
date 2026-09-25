@@ -1,0 +1,10 @@
+code,name,type,brand,thickness_mm,sheet_length_mm,sheet_width_mm,unit,cost_rate,sell_rate
+BWP-18,BWP plywood IS 710 18mm,board,SAMPLE BRAND,18,2440,1220,sheet,3900,
+BWP-12,BWP plywood IS 710 12mm,board,SAMPLE BRAND,12,2440,1220,sheet,2900,
+HDHMR-18,HDHMR board 18mm,board,SAMPLE BRAND,18,2440,1220,sheet,3100,
+LAM-1MM-M,Laminate 1mm matte,laminate,SAMPLE BRAND,1,2440,1220,sheet,1450,
+LAM-08-IN,Inner liner laminate 0.8mm,laminate,SAMPLE BRAND,0.8,2440,1220,sheet,650,
+ACR-1MM,Acrylic sheet 1mm high-gloss,acrylic,SAMPLE BRAND,1,2440,1220,sheet,4200,
+EB-2MM,PVC edge band 2mm x 22mm,edge_band,SAMPLE BRAND,2,,,metre,14,
+EB-08,PVC edge band 0.8mm x 22mm,edge_band,SAMPLE BRAND,0.8,,,metre,6,
+ADH-SR,Synthetic resin adhesive,adhesive,SAMPLE BRAND,,,,kg,210,

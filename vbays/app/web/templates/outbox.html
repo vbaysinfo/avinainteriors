@@ -1,0 +1,13 @@
+{% extends "base.html" %}{% block title %}Outbox{% endblock %}
+{% block content %}
+<h1>Outbox</h1>
+<p class="muted">Every message Vbays sends, or <b>would</b> send in test mode. <span class="pill">test</span> = recorded only, <span class="pill bad">blocked</span> = no approval, so it was not sent.</p>
+<div class="card scroll"><table>
+<tr><th>#</th><th>When</th><th>Channel</th><th>To</th><th>Audience</th><th>Status</th><th>Message</th></tr>
+{% for m in items %}
+<tr><td>{{ m.id }}</td><td>{{ m.created_at.strftime('%d %b %H:%M') }}</td><td>{{ m.channel }}</td><td>{{ m.recipient }}</td><td>{{ m.audience }}</td>
+<td><span class="pill {{ {'sent':'ok','failed':'bad','blocked':'bad','test':'warn'}.get(m.status,'') }}">{{ m.status }}</span>{% if m.error %}<br><small class="muted">{{ m.error }}</small>{% endif %}</td>
+<td style="white-space:pre-wrap;max-width:420px">{{ m.body }}</td></tr>
+{% else %}<tr><td colspan="7" class="muted">No messages yet.</td></tr>{% endfor %}
+</table></div>
+{% endblock %}
