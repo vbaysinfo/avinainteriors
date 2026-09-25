@@ -1,0 +1,31 @@
+{% extends "base.html" %}{% block title %}Media library{% endblock %}
+{% block content %}
+<p><a href="/marketing">← Marketing</a></p>
+<h1>Media library</h1>
+<p class="muted">Real photos and videos of our work. They come from the Google Drive folder, from photos sent to the Telegram bot, or from uploads here. Each one is checked; blurry, dark or private shots are rejected. Photos with <b>people</b> are only used once you tick consent.</p>
+{% if can('marketing.manage') %}
+<form method="post" action="/marketing/media/upload" enctype="multipart/form-data" class="card row">{{ csrf_input }}
+  <label>Photos / videos <input type="file" name="files" multiple accept="image/*,video/*" required></label>
+  <label>Project / note (optional) <input name="project" placeholder="e.g. Madhurawada 3BHK kitchen after"></label>
+  <button>Upload &amp; check</button>
+</form>
+{% endif %}
+<p class="tabs">{% for s in ['ok','rejected','new','all'] %}<a href="/marketing/media?status={{ s }}" class="{{ 'active' if s == status }}">{{ {'ok':'usable','rejected':'rejected','new':'waiting for check','all':'all'}[s] }}</a>{% endfor %}</p>
+<div class="gallery">
+{% for a in assets %}
+<div class="card media">
+  <a href="/marketing/media/file/{{ a.id }}" target="_blank">{% if a.kind == 'photo' %}<img src="/marketing/media/file/{{ a.id }}" loading="lazy" alt="{{ a.description or a.filename }}">{% else %}<div class="vid">🎬 video {{ (a.duration or 0)|round(1) }}s</div>{% endif %}</a>
+  <p><b>#{{ a.id }}</b> {{ a.room_type or '' }} · {{ a.style or '' }} · {{ a.stage or '' }} {% if a.quality_score %}<span class="pill">{{ a.quality_score }}/10</span>{% endif %}</p>
+  <p class="muted"><small>{{ a.description or a.filename }}{% if a.project_name %} · {{ a.project_name }}{% endif %} · used {{ a.times_used }}×</small></p>
+  {% if a.reject_reason %}<p class="bad"><small>{{ a.reject_reason }}</small></p>{% endif %}
+  {% if a.has_people %}<p><span class="pill {{ 'ok' if a.consent_ok else 'warn' }}">people {{ '· consent ✔' if a.consent_ok else '· needs consent' }}</span></p>{% endif %}
+  {% if can('marketing.manage') %}
+  <form method="post" action="/marketing/media/{{ a.id }}" class="inline">{{ csrf_input }}
+    {% if a.has_people %}<button name="what" value="consent" class="small secondary">{{ 'Remove consent' if a.consent_ok else 'Customer consented' }}</button>{% endif %}
+    {% if a.status == 'rejected' %}<button name="what" value="restore" class="small secondary">Use it anyway</button>{% else %}<button name="what" value="reject" class="small secondary">Don't use</button>{% endif %}
+  </form>
+  {% endif %}
+</div>
+{% else %}<p class="muted">Nothing here yet.</p>{% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "base.html" %}{% block title %}Leads{% endblock %}
+{% block content %}
+<h1>Leads from social media</h1>
+<p class="muted">Every comment and DM is read automatically. People who show interest become leads here, and sales gets a Telegram alert. The full CRM (stages, follow-ups, WhatsApp agent) arrives in Phase 3.</p>
+<p>{% for src, n in by_source %}<span class="pill">{{ src }}: {{ n }}</span> {% endfor %}</p>
+
+<div class="card scroll"><h2>Leads</h2><table>
+<tr><th>#</th><th>When</th><th>Score</th><th>From</th><th>Who</th><th>Interest</th><th>Stage</th></tr>
+{% for l in leads %}
+<tr><td>{{ l.id }}</td><td>{{ l.created_at.strftime('%d %b %H:%M') }}</td>
+<td><span class="pill {{ {'hot':'bad','warm':'warn','cold':''}.get(l.score,'') }}">{{ l.score }}</span><br><small class="muted">{{ l.score_reasons or '' }}</small></td>
+<td>{{ l.source }}</td><td>{{ l.handle or l.name or '' }}</td><td>{{ l.interest or '' }}{% if l.location %} · {{ l.location }}{% endif %}</td><td>{{ l.stage }}</td></tr>
+{% else %}<tr><td colspan="7" class="muted">No leads yet.</td></tr>{% endfor %}
+</table></div>
+
+{% if test_mode and can('marketing.manage') %}
+<form method="post" action="/marketing/simulate" class="card row">{{ csrf_input }}
+  <label>Try it (test mode): pretend someone commented <input name="text" value="Price for 2BHK full interiors in Madhurawada?" required></label>
+  <label>On <select name="platform"><option>instagram</option><option>youtube</option></select></label>
+  <button class="secondary">Simulate comment</button>
+</form>
+{% endif %}
+
+<div class="card scroll"><h2>Comments &amp; messages</h2><table>
+<tr><th>When</th><th>Where</th><th>From</th><th>Message</th><th>Type</th><th>Our reply</th></tr>
+{% for c in comments %}
+<tr><td>{{ c.received_at.strftime('%d %b %H:%M') }}</td><td>{{ c.platform }} {{ c.kind }}</td><td>{{ c.author_name or '' }}</td>
+<td>{{ c.text }}</td><td>{{ c.intent or '' }}{% if c.is_lead %} <span class="pill ok">lead #{{ c.lead_id }}</span>{% endif %}</td>
+<td>{% if c.reply_text %}{{ c.reply_text }}<br>{% endif %}<span class="pill {{ {'sent':'ok','test':'warn','handover':'bad','failed':'bad'}.get(c.reply_status,'') }}">{{ c.reply_status }}</span>
+{% if c.reply_status in ('handover','failed','pending') and can('marketing.manage') %}
+<form method="post" action="/marketing/comment/{{ c.id }}/reply" class="row">{{ csrf_input }}<input name="text" placeholder="Type your reply" required><button class="small">Send</button></form>{% endif %}
+</td></tr>
+{% else %}<tr><td colspan="6" class="muted">No comments yet.</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

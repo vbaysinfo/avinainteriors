@@ -21,7 +21,20 @@ DEFAULT_SETTINGS: dict[str, tuple[str, str]] = {
     "gst_default_percent": ("18", "Default GST % (confirm with your CA)"),
     "working_hours": ("Mon–Sat 10:00–20:00", "Office hours (used for replies and reminders)"),
     "morning_summary_time": ("08:00", "Time for the daily owner summary (Phase 8)"),
-    "auto_publish_marketing": ("off", "on = approved posts publish automatically at their scheduled time"),
+    "website": ("www.avinainteriors.com", "Website shown on videos"),
+    "tagline": ("Timeless Interiors, Crafted in Visakhapatnam", "Tagline on video intro cards"),
+    # --- Marketing autopilot ---
+    "marketing_paused": ("no", "yes = stop ALL automatic posting now (also /pause on Telegram)"),
+    "platform_policy_instagram": ("auto", "Instagram: auto = post by itself, approve = ask owner on Telegram first"),
+    "platform_policy_youtube": ("auto", "YouTube: auto = post by itself, approve = ask owner on Telegram first"),
+    "platform_policy_linkedin": ("approve", "LinkedIn: auto = post by itself, approve = ask owner on Telegram first"),
+    "ig_reels_per_week": ("4", "Reels per week (each also posted as a YouTube Short)"),
+    "ig_carousels_per_week": ("2", "Instagram carousels per week"),
+    "yt_long_videos_per_week": ("1", "Long YouTube videos (16:9) per week"),
+    "linkedin_posts_per_week": ("2", "LinkedIn posts per week"),
+    "marketing_language": ("te-en", "Content language: te = Telugu, en = English, te-en = mix"),
+    "auto_reply_comments": ("on", "on = reply to comments/DMs automatically (complaints always go to a person)"),
+    "instagram_dm_replies": ("on", "on = also read and answer Instagram DMs"),
 }
 
 

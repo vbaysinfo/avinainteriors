@@ -70,5 +70,6 @@ def get_db() -> Iterator[Session]:
 def create_all() -> None:
     # Import models so they register on Base.metadata
     from app.core import models  # noqa: F401
+    from app.modules.m01_marketing import models as _m01  # noqa: F401
 
     Base.metadata.create_all(get_engine())

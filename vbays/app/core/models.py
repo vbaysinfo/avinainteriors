@@ -336,3 +336,60 @@ class MessageTemplate(TimestampMixin, Base):
     body: Mapped[str] = mapped_column(Text)
     meta_approved: Mapped[bool] = mapped_column(Boolean, default=False)
     owner_approved: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+# ---------------------------------------------------------------------------
+# Connections to outside platforms (tokens are stored ENCRYPTED)
+# ---------------------------------------------------------------------------
+
+
+class Connection(TimestampMixin, Base):
+    __tablename__ = "connections"
+
+    platform: Mapped[str] = mapped_column(String(20), primary_key=True)  # instagram / google / linkedin
+    account_name: Mapped[str | None] = mapped_column(String(200))
+    account_id: Mapped[str | None] = mapped_column(String(120))
+    token_enc: Mapped[str | None] = mapped_column(Text)
+    refresh_token_enc: Mapped[str | None] = mapped_column(Text)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    scopes: Mapped[str | None] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(String(20), default="connected")  # connected / error / expired
+    last_error: Mapped[str | None] = mapped_column(Text)
+    extra: Mapped[dict | None] = mapped_column(JSON)
+    connected_by_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"))
+
+
+# ---------------------------------------------------------------------------
+# Leads (shared: created by Marketing now; the full CRM arrives in Phase 3)
+# ---------------------------------------------------------------------------
+
+
+class Lead(TimestampMixin, Base):
+    __tablename__ = "leads"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    customer_id: Mapped[int | None] = mapped_column(ForeignKey("customers.id"))
+    name: Mapped[str | None] = mapped_column(String(120))
+    handle: Mapped[str | None] = mapped_column(String(120))  # @instagram / YouTube name
+    phone: Mapped[str | None] = mapped_column(String(20))
+    source: Mapped[str] = mapped_column(String(20), index=True)  # instagram/youtube/linkedin/whatsapp/website/referral/walk_in/google
+    source_post_id: Mapped[int | None] = mapped_column(Integer)  # social_posts.id
+    source_detail: Mapped[str | None] = mapped_column(Text)
+    stage: Mapped[str] = mapped_column(String(30), default="new", index=True)
+    score: Mapped[str] = mapped_column(String(10), default="warm")  # hot / warm / cold
+    score_reasons: Mapped[str | None] = mapped_column(Text)
+    interest: Mapped[str | None] = mapped_column(Text)
+    location: Mapped[str | None] = mapped_column(String(120))
+    assigned_to_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"))
+    last_contact_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    notes: Mapped[str | None] = mapped_column(Text)
+
+
+class LeadActivity(TimestampMixin, Base):
+    __tablename__ = "lead_activities"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    lead_id: Mapped[int] = mapped_column(ForeignKey("leads.id"), index=True)
+    kind: Mapped[str] = mapped_column(String(30))  # comment/dm/reply/call/note/stage
+    text: Mapped[str] = mapped_column(Text)
+    by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"))

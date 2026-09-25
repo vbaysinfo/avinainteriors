@@ -1,0 +1,63 @@
+{% extends "base.html" %}{% block title %}Content #{{ item.id }}{% endblock %}
+{% block content %}
+{% set pkg = item.package or {} %}
+<p><a href="/marketing?week={{ item.week_start.isoformat() }}">← Marketing</a></p>
+<h1>#{{ item.id }} {{ item.topic }}</h1>
+<p class="muted">{{ item.format.replace('_',' ') }} · {{ item.template.replace('_',' ') }} · {{ item.language }} · {{ item.scheduled_at.astimezone(tz).strftime('%A %d %b %Y %H:%M') }} · status <b>{{ item.status }}</b></p>
+{% if item.error %}<div class="flash error">{{ item.error }}</div>{% endif %}
+
+<div class="card">
+  <h2>Where it goes</h2>
+  <table><tr><th>Platform</th><th>Status</th><th>Time</th><th>Link / error</th></tr>
+  {% for p in posts %}
+  <tr><td>{{ p.platform }}</td><td><span class="pill">{{ p.status.replace('_',' ') }}</span></td>
+  <td>{{ p.scheduled_at.astimezone(tz).strftime('%a %d %b %H:%M') }}</td>
+  <td>{% if p.permalink %}<a href="{{ p.permalink }}" target="_blank" rel="noopener">{{ p.permalink }}</a>{% endif %}{% if p.error %}<small class="bad">{{ p.error[:200] }}</small>{% endif %}</td></tr>
+  {% endfor %}</table>
+  {% if can('marketing.manage') %}
+  <div class="row" style="margin-top:12px">
+    {% if posts|selectattr('status','equalto','awaiting_approval')|list %}<form method="post" action="/marketing/item/{{ item.id }}" class="inline">{{ csrf_input }}<input type="hidden" name="what" value="approve"><button>✅ Approve</button></form>{% endif %}
+    {% if item.status in ('planned','written','failed') %}<form method="post" action="/marketing/item/{{ item.id }}" class="inline">{{ csrf_input }}<input type="hidden" name="what" value="produce"><button class="secondary">Make it now</button></form>{% endif %}
+    {% if posts|selectattr('status','equalto','scheduled')|list %}<form method="post" action="/marketing/item/{{ item.id }}" class="inline">{{ csrf_input }}<input type="hidden" name="what" value="publish_now"><button class="secondary">Post now</button></form>{% endif %}
+    <form method="post" action="/marketing/item/{{ item.id }}" class="inline">{{ csrf_input }}<input type="hidden" name="what" value="regenerate"><button class="secondary">🔄 Make a new version</button></form>
+    <form method="post" action="/marketing/item/{{ item.id }}" class="inline row">{{ csrf_input }}<input type="hidden" name="what" value="reschedule"><input type="datetime-local" name="when" class="short" style="width:auto"><button class="secondary">🕒 Reschedule</button></form>
+    <form method="post" action="/marketing/item/{{ item.id }}" class="inline">{{ csrf_input }}<input type="hidden" name="what" value="reject"><button class="danger">❌ Reject</button></form>
+  </div>
+  {% endif %}
+</div>
+
+<div class="grid2">
+<div class="card">
+  <h2>Preview</h2>
+  {% if item.video_path %}<video src="/marketing/file/{{ item.id }}/video" controls style="max-width:100%;max-height:640px;background:#000;border-radius:8px"></video>{% endif %}
+  {% if item.video_landscape_path %}<video src="/marketing/file/{{ item.id }}/landscape" controls style="width:100%;background:#000;border-radius:8px"></video>{% endif %}
+  {% if item.image_paths %}<div class="thumbs">{% for p in item.image_paths %}<img src="/marketing/file/{{ item.id }}/slide?n={{ loop.index0 }}" alt="slide {{ loop.index }}">{% endfor %}</div>{% endif %}
+  {% if item.thumbnail_path %}<p class="muted">Cover / thumbnail:</p><img src="/marketing/file/{{ item.id }}/thumb" style="max-width:100%;border-radius:8px" alt="thumbnail">{% endif %}
+  {% if not (item.video_path or item.video_landscape_path or item.image_paths) %}<p class="muted">Not made yet. It will be made up to 2 days before posting.</p>{% endif %}
+</div>
+<div class="card">
+  <h2>Text</h2>
+  {% if pkg %}
+  {% if pkg.missing_info %}<div class="flash error">Missing info (so it asks you first): {{ pkg.missing_info|join('; ') }}</div>{% endif %}
+  {% if item.check and item.check.problems %}<div class="flash error">Fact check: {{ item.check.problems|join('; ') }}</div>{% endif %}
+  <p><b>Hook:</b> {{ pkg.hook }}</p>
+  <p><b>Caption:</b></p><pre class="mono">{{ pkg.caption }}
+
+{{ (pkg.hashtags or [])|join(' ') }}</pre>
+  <p><b>Call to action:</b> {{ pkg.cta }}</p>
+  {% if pkg.linkedin_text %}<p><b>LinkedIn:</b></p><pre class="mono">{{ pkg.linkedin_text }}</pre>{% endif %}
+  {% if pkg.youtube %}<details><summary><b>YouTube SEO</b></summary>
+    <p><b>Title:</b> {{ pkg.youtube.title }}</p><pre class="mono">{{ pkg.youtube.description }}</pre>
+    <p><b>Tags:</b> {{ (pkg.youtube.tags or [])|join(', ') }}</p>
+    {% if pkg.youtube.chapters %}<pre class="mono">{{ pkg.youtube.chapters|join('\n') }}</pre>{% endif %}</details>{% endif %}
+  {% if pkg.scenes %}<details><summary><b>Script ({{ pkg.scenes|length }} scenes)</b></summary><ol>
+    {% for s in pkg.scenes %}<li>{{ s.seconds }}s · <b>{{ s.on_screen_text }}</b>{% if s.voiceover %}<br><small>🎙 {{ s.voiceover }}</small>{% endif %}</li>{% endfor %}</ol></details>{% endif %}
+  {% else %}<p class="muted">Not written yet.</p>{% endif %}
+  <p class="muted">Why this: {{ item.reason }}</p>
+</div>
+</div>
+
+{% if media %}<div class="card"><h2>Media used</h2><div class="thumbs">
+{% for a in media %}<a href="/marketing/media/file/{{ a.id }}" target="_blank">{% if a.kind == 'photo' %}<img src="/marketing/media/file/{{ a.id }}" alt="{{ a.description or '' }}">{% else %}<span class="pill">video #{{ a.id }}</span>{% endif %}</a>{% endfor %}
+</div></div>{% endif %}
+{% endblock %}

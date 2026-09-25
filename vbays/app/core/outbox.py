@@ -49,7 +49,13 @@ def send(
     approved: bool = False,
     approval_id: int | None = None,
     module_code: str | None = None,
+    deliver: Callable[[], dict | None] | None = None,
 ) -> OutboxMessage:
+    """Record and (unless blocked / test mode) send a message.
+
+    deliver: optional function that does the real sending (e.g. post an
+    Instagram comment reply). Otherwise the channel's registered sender is used.
+    """
     test = is_test_mode(db, module_code)
     msg = OutboxMessage(
         channel=channel,
@@ -68,7 +74,7 @@ def send(
     elif test and audience in ("customer", "public"):
         msg.status = "test"
     else:
-        sender = SENDERS.get(channel)
+        sender = (lambda r, b, p: deliver()) if deliver else SENDERS.get(channel)
         if sender is None:
             msg.status = "test"
             msg.error = f"No {channel} connection configured; message recorded only."

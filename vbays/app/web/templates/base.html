@@ -14,6 +14,7 @@
   <input type="checkbox" id="navtoggle" hidden><label for="navtoggle" class="burger">☰</label>
   <nav>
     <a href="/">Home</a>
+    {% if can('marketing.view') %}<a href="/marketing">Marketing</a><a href="/marketing/leads">Leads</a>{% endif %}
     {% if can('approvals.view') %}<a href="/approvals">Approvals</a>{% endif %}
     {% if can('knowledge.view') %}<a href="/knowledge">Knowledge</a>{% endif %}
     {% if can('masterdata.view') %}<a href="/masterdata">Master data</a>{% endif %}

@@ -32,18 +32,21 @@ PERMISSIONS: dict[str, str] = {
     "audit.view": "See the audit log",
     "customers.view_contact": "See customer phone numbers and addresses",
     "backups.run": "Run a backup now",
+    "marketing.view": "See marketing: calendar, posts, media, leads from social media",
+    "marketing.manage": "Run/pause marketing, approve posts, connect accounts, upload media",
 }
 
 ROLE_PERMISSIONS: dict[str, set[str]] = {
     "owner": {"*"},
     "manager": set(PERMISSIONS) - {"users.manage", "modules.manage", "settings.manage"},
-    "sales": {"dashboard.view", "knowledge.view", "masterdata.view", "approvals.view", "customers.view_contact"},
+    "sales": {"dashboard.view", "knowledge.view", "masterdata.view", "approvals.view", "customers.view_contact",
+              "marketing.view"},
     "designer": {"dashboard.view", "knowledge.view", "masterdata.view"},
     "factory_manager": {"dashboard.view", "masterdata.view", "masterdata.import", "approvals.view", "approvals.decide"},
     "factory_staff": set(),  # Telegram only
     "supervisor": {"dashboard.view", "knowledge.view", "customers.view_contact"},
     "accounts": {"dashboard.view", "masterdata.view", "approvals.view", "approvals.decide", "outbox.view"},
-    "marketing": {"dashboard.view", "knowledge.view", "approvals.view"},
+    "marketing": {"dashboard.view", "knowledge.view", "approvals.view", "marketing.view", "marketing.manage"},
 }
 
 

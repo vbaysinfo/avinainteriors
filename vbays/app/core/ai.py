@@ -77,3 +77,38 @@ def ask(db: Session, question: str, extra_context: str = "", max_tokens: int = 2
 
 def needs_handover(reply: str) -> bool:
     return HANDOVER_MARKER in reply
+
+
+class AIUnavailable(Exception):
+    """No API key, or the API failed. Callers fall back to simple rules."""
+
+
+def ask_json(db: Session, instructions: str, output_model, images: list[tuple[bytes, str]] | None = None,
+             max_tokens: int = 16000, use_knowledge: bool = True):
+    """Ask Claude and get back a validated pydantic object (structured output).
+
+    images: optional list of (bytes, media_type) for photo checks (Claude vision).
+    """
+    if not available():
+        raise AIUnavailable("No ANTHROPIC_API_KEY set")
+    import base64
+
+    content: list[dict] = []
+    for data, media_type in images or []:
+        content.append({"type": "image", "source": {"type": "base64", "media_type": media_type,
+                                                     "data": base64.b64encode(data).decode()}})
+    content.append({"type": "text", "text": instructions})
+    kwargs = {"system": system_prompt(db)} if use_knowledge else {}
+    try:
+        response = _get_client().messages.parse(
+            model=get_settings().claude_model,
+            max_tokens=max_tokens,
+            messages=[{"role": "user", "content": content}],
+            output_format=output_model,
+            **kwargs,
+        )
+    except (anthropic.APIConnectionError, anthropic.APIStatusError) as exc:
+        raise AIUnavailable(str(exc)) from exc
+    if response.stop_reason in ("refusal", "max_tokens") or response.parsed_output is None:
+        raise AIUnavailable(f"AI could not complete the request ({response.stop_reason})")
+    return response.parsed_output

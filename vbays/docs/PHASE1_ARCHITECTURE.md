@@ -303,11 +303,11 @@ Weekly plan (Claude) ──▶ Vbays video maker (FFmpeg: 9:16 Reels, 16:9 YouTu
             Comments/DMs read back ▶ replies from knowledge files ▶ leads into CRM
 ```
 
-**"Automatic" and your approval rule.** Your Part 2 rule says nothing is
-posted without approval. So Vbays does everything automatically **up to**
-one Telegram tap from you, and **everything after** the tap. If you want,
-we can later allow some content (e.g. "Tip of the Day") to publish with no
-tap, using the `auto_publish_marketing` setting, but only if you choose to.
+**Your decision (Phase 2): Instagram and YouTube post fully automatically;
+LinkedIn posts only after you tap ✅.** These are the `platform_policy_*`
+settings. Safety brakes stay on: a post still waits for you if the AI
+fact check fails or information is missing, and `/pause` stops everything.
+Details: `MARKETING_SETUP.md`.
 
 **What the platforms require (free, but takes time):**
 

@@ -1,0 +1,46 @@
+{% extends "base.html" %}{% block title %}Connections{% endblock %}
+{% block content %}
+<p><a href="/marketing">← Marketing</a></p>
+<h1>Connect your accounts</h1>
+<p class="muted">Vbays uses only the official Instagram, YouTube and LinkedIn APIs. Logins are stored encrypted. Step-by-step help: <code>docs/MARKETING_SETUP.md</code>.</p>
+{% if not public_ok %}<div class="flash error">Vbays is not on a public <b>https://</b> address yet (BASE_URL in .env). Instagram needs one to fetch your videos, so automatic Instagram posting only works once Vbays is hosted online. YouTube and LinkedIn work from your computer.</div>{% endif %}
+
+<div class="card">
+  <h2>Instagram</h2>
+  {% set c = conns.instagram %}
+  {% if c %}<p><span class="pill {{ 'ok' if c.status == 'connected' else 'bad' }}">{{ c.status }}</span> {{ c.account_name }} · token valid until {{ c.expires_at.strftime('%d %b %Y') if c.expires_at else '?' }} (renewed automatically)</p>{% if c.last_error %}<p class="bad">{{ c.last_error }}</p>{% endif %}{% endif %}
+  <form method="post" action="/marketing/connect/instagram" class="row">{{ csrf_input }}
+    <label>Instagram access token (from Meta developer app → Instagram → API setup with Instagram login → Generate token)
+      <input name="token" type="password" required autocomplete="off"></label>
+    <button>{{ 'Replace token' if c else 'Connect Instagram' }}</button>
+  </form>
+  {% if c %}<form method="post" action="/marketing/disconnect/instagram" class="inline">{{ csrf_input }}<button class="small secondary">Disconnect</button></form>{% endif %}
+</div>
+
+<div class="card">
+  <h2>YouTube + Google Drive</h2>
+  {% set c = conns.google %}
+  {% if c %}<p><span class="pill {{ 'ok' if c.status == 'connected' else 'bad' }}">{{ c.status }}</span> {{ c.account_name }}</p>{% if c.last_error %}<p class="bad">{{ c.last_error }}</p>{% endif %}{% endif %}
+  {% if google_ready %}
+    <p><a href="/marketing/connect/google/start"><button type="button">{{ 'Reconnect Google' if c else 'Connect Google' }}</button></a></p>
+  {% else %}
+    <p class="bad">First add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to .env and restart.</p>
+  {% endif %}
+  <p class="muted">Redirect URI to paste in Google Cloud: <code>{{ google_redirect }}</code><br>
+  Media folder: {{ settings.google_drive_folder_id or 'not set (GOOGLE_DRIVE_FOLDER_ID in .env)' }}</p>
+  {% if c %}<form method="post" action="/marketing/disconnect/google" class="inline">{{ csrf_input }}<button class="small secondary">Disconnect</button></form>{% endif %}
+</div>
+
+<div class="card">
+  <h2>LinkedIn</h2>
+  {% set c = conns.linkedin %}
+  {% if c %}<p><span class="pill {{ 'ok' if c.status == 'connected' else 'bad' }}">{{ c.status }}</span> {{ c.account_name }} · valid until {{ c.expires_at.strftime('%d %b %Y') if c.expires_at else '?' }} (Vbays reminds you on Telegram before it runs out)</p>{% endif %}
+  {% if linkedin_ready %}
+    <p><a href="/marketing/connect/linkedin/start"><button type="button">{{ 'Reconnect LinkedIn' if c else 'Connect LinkedIn' }}</button></a></p>
+  {% else %}
+    <p class="bad">First add LINKEDIN_CLIENT_ID and LINKEDIN_CLIENT_SECRET to .env and restart.</p>
+  {% endif %}
+  <p class="muted">Redirect URL to paste in the LinkedIn app: <code>{{ linkedin_redirect }}</code>. Posts go to your personal profile, and only after you tap ✅ on Telegram.</p>
+  {% if c %}<form method="post" action="/marketing/disconnect/linkedin" class="inline">{{ csrf_input }}<button class="small secondary">Disconnect</button></form>{% endif %}
+</div>
+{% endblock %}

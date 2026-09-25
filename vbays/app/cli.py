@@ -31,6 +31,7 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("test-telegram")
     ta = sub.add_parser("test-ai")
     ta.add_argument("question")
+    sub.add_parser("demo-marketing", help="TEST MODE: run the whole marketing flow with demo pictures")
     args = p.parse_args(argv)
 
     if args.cmd == "init-db":
@@ -69,6 +70,14 @@ def main(argv: list[str] | None = None) -> int:
             for u in owners:
                 telegram_bot.send_message(str(u.telegram_chat_id), "👋 Test message from Vbays. Telegram is working!")
                 print(f"Sent to {u.name}")
+    elif args.cmd == "demo-marketing":
+        from app.modules.m01_marketing import demo, publisher  # noqa: F401  (registers approval handlers)
+
+        init_db()
+        with session_scope() as db:
+            for key, value in demo.run(db).items():
+                print(f"{key:14} {value}")
+        print("\nOpen the website → Marketing to see the week, the video and the leads.")
     elif args.cmd == "test-ai":
         from app.core import ai
 

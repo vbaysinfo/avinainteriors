@@ -16,7 +16,8 @@ class ModuleInfo:
 
 
 MODULES: list[ModuleInfo] = [
-    ModuleInfo("M01", "Marketing (Instagram & YouTube)", 2),
+    ModuleInfo("M01", "Marketing (Instagram, YouTube, LinkedIn)", 2, built=True,
+               package="app.modules.m01_marketing"),
     ModuleInfo("M02", "WhatsApp Sales Agent", 3),
     ModuleInfo("M03", "CRM & Lead Pipeline", 3),
     ModuleInfo("M04", "Site Visit & Measurement", 4),

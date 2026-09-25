@@ -1,0 +1,62 @@
+{% extends "base.html" %}{% block title %}Marketing{% endblock %}
+{% block content %}
+<h1>Marketing autopilot</h1>
+
+{% if not module.enabled %}
+<div class="flash error">Marketing is <b>OFF</b>. Switch it on in <a href="/modules">Modules</a> to start the autopilot.</div>
+{% endif %}
+{% if test_mode %}<div class="flash">Marketing is in <b>TEST</b> mode: posts and replies are made but only recorded in the Outbox. Set Marketing to <b>LIVE</b> in <a href="/modules">Modules</a> (and TEST_MODE=false in .env) when you're ready.</div>{% endif %}
+{% if paused %}<div class="flash error">⏸ Automatic posting is <b>PAUSED</b>.</div>{% endif %}
+
+<div class="tiles">
+  <a class="tile" href="/marketing/media"><b>{{ stats.media_ok }}</b><span>Usable photos/videos</span></a>
+  <a class="tile" href="/marketing/leads"><b>{{ stats.leads_week }}</b><span>New leads (7 days)</span></a>
+  <a class="tile" href="/marketing/leads"><b>{{ stats.handover }}</b><span>Messages needing a person</span></a>
+  <a class="tile" href="/approvals"><b>{{ stats.awaiting }}</b><span>Posts waiting for your ✅</span></a>
+</div>
+
+<div class="grid2">
+<div class="card">
+  <h2>Accounts</h2>
+  <table>
+  {% for name, label in [('instagram','Instagram'),('google','YouTube + Google Drive'),('linkedin','LinkedIn')] %}
+    {% set c = conns[name] %}
+    <tr><td>{{ label }}</td><td>{% if c and c.status == 'connected' %}<span class="pill ok">connected</span> {{ c.account_name }}{% elif c %}<span class="pill bad">{{ c.status }}</span>{% else %}<span class="pill warn">not connected</span>{% endif %}</td></tr>
+  {% endfor %}
+  </table>
+  {% if can('marketing.manage') %}<p><a href="/marketing/connections">Manage connections →</a></p>{% endif %}
+  <p class="muted">Posting rules: Instagram <b>{{ policies.instagram }}</b> · YouTube <b>{{ policies.youtube }}</b> · LinkedIn <b>{{ policies.linkedin }}</b>. Change them in <a href="/settings">Settings</a>.</p>
+</div>
+<div class="card">
+  <h2>Run now</h2>
+  <p class="muted">These all run by themselves on a timer. Use the buttons only if you don't want to wait.</p>
+  {% if can('marketing.manage') %}
+  <div class="row">
+  {% for what, label in [('plan_now','Plan this week'),('plan_next','Plan next week'),('scan_media','Check new media'),('produce_now','Make content now'),('publish_now','Post what is due'),('poll_now','Check comments'),('report_now','Send weekly report')] %}
+    <form method="post" action="/marketing/action" class="inline">{{ csrf_input }}<input type="hidden" name="what" value="{{ what }}"><button class="small secondary">{{ label }}</button></form>
+  {% endfor %}
+  <form method="post" action="/marketing/action" class="inline">{{ csrf_input }}<input type="hidden" name="what" value="{{ 'resume' if paused else 'pause' }}"><button class="small {{ '' if paused else 'danger' }}">{{ '▶️ Resume posting' if paused else '⏸ Pause posting' }}</button></form>
+  </div>
+  {% endif %}
+</div>
+</div>
+
+<div class="card scroll">
+  <h2>Week of {{ week.strftime('%d %b %Y') }}
+    <small><a href="/marketing?week={{ prev_week.isoformat() }}">← previous</a> · <a href="/marketing?week={{ next_week.isoformat() }}">next →</a></small></h2>
+  <table>
+    <tr><th>When</th><th>What</th><th>Topic</th><th>Platforms</th><th>Status</th></tr>
+    {% for it in items %}
+    <tr>
+      <td>{{ it.scheduled_at.astimezone(tz).strftime('%a %d %b %H:%M') }}</td>
+      <td>{{ it.format.replace('_',' ') }}<br><small class="muted">{{ it.template.replace('_',' ') }} · {{ it.language }}</small></td>
+      <td><a href="/marketing/item/{{ it.id }}">{{ it.topic }}</a>{% if it.error %}<br><small class="bad">{{ it.error[:120] }}</small>{% endif %}</td>
+      <td>{% for p in posts.get(it.id, []) %}<span class="pill {{ {'published':'ok','test':'warn','failed':'bad','rejected':'bad','awaiting_approval':'warn','scheduled':'ok'}.get(p.status,'') }}">{{ p.platform }}: {{ p.status.replace('_',' ') }}</span> {% endfor %}</td>
+      <td>{{ it.status }}</td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5" class="muted">Nothing planned for this week yet. The autopilot plans every Sunday evening (or press “Plan this week”).</td></tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

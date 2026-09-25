@@ -78,5 +78,21 @@ def test_upload_preview_and_confirm(client):
 
 def test_unbuilt_module_cannot_be_switched_on(client):
     r = login(client, "owner")
-    r = client.post("/modules/M01", data={"csrf_token": csrf(r.text), "field": "enabled"})
+    r = client.post("/modules/M02", data={"csrf_token": csrf(r.text), "field": "enabled"})
     assert "not built yet" in r.text
+
+
+def test_marketing_pages_and_roles(client):
+    login(client, "owner")
+    for path in ["/marketing", "/marketing/leads", "/marketing/media", "/marketing/connections"]:
+        assert client.get(path).status_code == 200, path
+    login(client, "sales")
+    assert client.get("/marketing/leads").status_code == 200
+    assert client.get("/marketing/connections").status_code == 403
+    login(client, "designer")
+    assert client.get("/marketing").status_code == 403
+
+
+def test_public_media_link_rejects_garbage(client):
+    client.cookies.clear()
+    assert client.get("/m/not-a-real-token").status_code == 404

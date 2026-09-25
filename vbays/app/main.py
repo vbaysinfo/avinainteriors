@@ -16,11 +16,9 @@ from starlette.middleware.sessions import SessionMiddleware
 from app.config import get_settings
 from app.core import scheduler
 from app.core.auth import LoginRequired
-from app.core.db import session_scope
-from app.core.models import ModuleSwitch
 from app.core.setup import init_db
 from app.integrations import telegram_bot
-from app.modules import BY_CODE
+from app.modules import MODULES
 from app.web.common import redirect, render
 from app.web.routes import router
 
@@ -43,14 +41,11 @@ def check_settings() -> None:
 
 
 def load_modules(app: FastAPI) -> None:
-    """Load each module that is switched ON and built."""
-    with session_scope() as db:
-        enabled = [sw.code for sw in db.query(ModuleSwitch).filter(ModuleSwitch.enabled.is_(True))]
-    for code in enabled:
-        info = BY_CODE.get(code)
-        if info and info.built and info.package:
+    """Load every built module. Each module checks its ON/OFF switch while it runs,
+    so switching a module on or off works immediately, without a restart."""
+    for info in MODULES:
+        if info.built and info.package:
             importlib.import_module(info.package).register(app)
-            logging.getLogger(__name__).info("Module %s loaded", code)
 
 
 @asynccontextmanager
@@ -59,7 +54,6 @@ async def lifespan(app: FastAPI):
     check_settings()
     init_db()
     telegram_bot.register()
-    load_modules(app)
     if get_settings().scheduler_enabled:
         scheduler.start()
     await telegram_bot.start_polling()
@@ -81,6 +75,7 @@ def create_app() -> FastAPI:
     )
     app.mount("/static", StaticFiles(directory=Path(__file__).parent / "web" / "static"), name="static")
     app.include_router(router)
+    load_modules(app)
 
     @app.exception_handler(LoginRequired)
     async def _login_required(request: Request, exc: LoginRequired):

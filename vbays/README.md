@@ -14,7 +14,7 @@ in each other's way.
 |---|---|---|
 | 0 | Quick start: Claude Desktop Project (drafting); no third-party posting tools | ✅ Ready — see `phase0/QUICKSTART.md` |
 | 1 | Architecture, database, logins/roles, data import, Telegram bot, admin panel | ✅ Built & tested — see `docs/SETUP_GUIDE.md` |
-| 2 | M1 Marketing: direct Instagram + YouTube posting (official APIs) | ⏳ Next |
+| 2 | M1 Marketing autopilot: plans, makes videos, auto-posts Instagram + YouTube, LinkedIn after ✅, replies to comments, captures leads | ✅ Built & tested in test mode — see `docs/MARKETING_SETUP.md` |
 | 3 | M2 WhatsApp Sales Agent + M3 CRM | ⏳ |
 | 4 | M4 Site visit & measurement + M5 Quotation | ⏳ |
 | 5 | M6 Orders & payments | ⏳ |
@@ -30,7 +30,7 @@ in each other's way.
 vbays/
 ├── app/                 the Vbays program (Python)
 │   ├── core/            logins, roles, approvals, outbox, audit, AI, backups
-│   ├── integrations/    Telegram (Instagram, YouTube, WhatsApp come later)
+│   ├── integrations/    Telegram, Instagram, YouTube + Drive, LinkedIn (WhatsApp in Phase 3)
 │   ├── modules/         the 13 business modules (switch on/off)
 │   └── web/             admin website pages
 ├── knowledge/           the ONLY facts the AI may tell customers
@@ -42,7 +42,7 @@ vbays/
 └── docker-compose.yml   one-command start
 ```
 
-**Start here:** `docs/SETUP_GUIDE.md`.
+**Start here:** `docs/SETUP_GUIDE.md`, then `docs/MARKETING_SETUP.md`.
 
 ## Safety built in
 - **TEST MODE** is on by default: nothing reaches customers or social media.

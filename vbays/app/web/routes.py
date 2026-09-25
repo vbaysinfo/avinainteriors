@@ -216,8 +216,7 @@ def module_toggle(request: Request, code: str, field: str = Form(...),
         return redirect("/modules")
     setattr(sw, field, not getattr(sw, field))
     audit.log(db, f"module.{field}", user, "module", code, {"value": getattr(sw, field)}, ip=_ip(request))
-    flash(request, f"{sw.name}: {field.replace('_', ' ')} is now {'ON' if getattr(sw, field) else 'OFF'}. "
-                   "Restart Vbays for screens/jobs to change.")
+    flash(request, f"{sw.name}: {field.replace('_', ' ')} is now {'ON' if getattr(sw, field) else 'OFF'}.")
     return redirect("/modules")
 
 

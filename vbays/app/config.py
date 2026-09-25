@@ -54,6 +54,21 @@ class Settings(BaseSettings):
     # --- Scheduler ---
     scheduler_enabled: bool = True
 
+    # --- Marketing (Module M01) ---
+    # Instagram: "Instagram API with Instagram Login" (graph.instagram.com)
+    instagram_api_version: str = "v24.0"
+    # Google (YouTube + Drive): OAuth client of type "Web application"
+    google_client_id: str = ""
+    google_client_secret: str = ""
+    google_drive_folder_id: str = ""  # the Drive folder staff drop photos/videos into
+    # LinkedIn: app with the "Share on LinkedIn" + "Sign In with LinkedIn using OpenID Connect" products
+    linkedin_client_id: str = ""
+    linkedin_client_secret: str = ""
+    linkedin_api_version: str = "202605"  # YYYYMM, see LinkedIn docs
+    # Video
+    voiceover_enabled: bool = True  # Microsoft Edge neural voices (free, needs internet)
+    ffmpeg_path: str = ""  # leave empty to use the bundled ffmpeg
+
 
 @lru_cache
 def get_settings() -> Settings:

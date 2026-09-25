@@ -44,8 +44,22 @@ def _call(method: str, data: dict) -> dict:
 
 
 def send_message(chat_id: str, text: str, payload: dict | None = None) -> dict:
+    payload = payload or {}
+    if payload.get("photo_path"):  # picture with a short caption
+        import json
+
+        data = {"chat_id": chat_id, "caption": text[:1024]}
+        if payload.get("reply_markup"):
+            data["reply_markup"] = json.dumps(payload["reply_markup"])
+        token = get_settings().telegram_bot_token
+        with open(payload["photo_path"], "rb") as f:
+            r = httpx.post(API.format(token=token, method="sendPhoto"), data=data, files={"photo": f}, timeout=60)
+        body = r.json()
+        if not body.get("ok"):
+            raise RuntimeError(f"Telegram error: {body.get('description')}")
+        return {"message_id": body["result"].get("message_id")}
     data = {"chat_id": chat_id, "text": text[:4096]}
-    if payload and payload.get("reply_markup"):
+    if payload.get("reply_markup"):
         data["reply_markup"] = payload["reply_markup"]
     result = _call("sendMessage", data)
     return {"message_id": result.get("message_id")}
@@ -128,6 +142,10 @@ HELP = (
 
 _application = None
 
+# Modules add their own Telegram commands here: functions that receive the
+# python-telegram-bot Application and call app.add_handler(...)
+HANDLER_HOOKS: list = []
+
 
 def build_application():
     from telegram import InlineKeyboardMarkup, Update
@@ -177,6 +195,8 @@ def build_application():
     app.add_handler(CommandHandler("help", help_cmd))
     app.add_handler(CommandHandler("pending", pending))
     app.add_handler(CallbackQueryHandler(on_button, pattern=r"^apv:"))
+    for hook in HANDLER_HOOKS:
+        hook(app)
     return app
 
 
