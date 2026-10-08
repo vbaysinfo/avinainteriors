@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // The Sketch → Excel API reads the bundled Excel template from disk.
+  outputFileTracingIncludes: {
+    "/api/sketch/**": ["./templates/**/*"],
+  },
 };
 
 export default nextConfig;

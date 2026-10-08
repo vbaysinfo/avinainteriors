@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# sketch-to-excel uploaded templates
+/storage
+!.env.example

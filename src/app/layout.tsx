@@ -6,6 +6,7 @@ import { Footer } from "@/components/layout/Footer";
 import { WhatsAppButton } from "@/components/layout/WhatsAppButton";
 import { ScrollToTopButton } from "@/components/layout/ScrollToTopButton";
 import { OrganizationJsonLd } from "@/components/shared/JsonLd";
+import { SiteChrome } from "@/components/layout/SiteChrome";
 import { siteConfig } from "@/data/site";
 
 const fraunces = Fraunces({
@@ -85,11 +86,15 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-cream text-ink">
         <OrganizationJsonLd />
-        <Navbar />
+        <SiteChrome>
+          <Navbar />
+        </SiteChrome>
         <main className="flex-1">{children}</main>
-        <Footer />
-        <WhatsAppButton />
-        <ScrollToTopButton />
+        <SiteChrome>
+          <Footer />
+          <WhatsAppButton />
+          <ScrollToTopButton />
+        </SiteChrome>
       </body>
     </html>
   );

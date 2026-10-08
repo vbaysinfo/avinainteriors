@@ -6,6 +6,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
+      disallow: ["/sketch-to-excel", "/api/"],
     },
     sitemap: `${siteConfig.url}/sitemap.xml`,
   };
